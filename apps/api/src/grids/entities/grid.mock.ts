@@ -8,6 +8,7 @@ export const mockGrid: Grid = {
   height: 10,
   width: 10,
   bombs: 10,
+  cells: [],
 };
 
 export const mockCreateGridDto: CreateGridDto = {

@@ -1,5 +1,6 @@
 import { DeleteResult } from 'typeorm';
 import { Cell } from './cell.entity';
+import { Grid } from 'src/grids/entities/grid.entity';
 
 export const mockCell: Cell = {
   id: 1,
@@ -8,6 +9,7 @@ export const mockCell: Cell = {
   hasBomb: false,
   bombsAround: 0,
   isOpen: false,
+  grid: new Grid(),
 };
 
 export const mockDeleteResult: DeleteResult = {

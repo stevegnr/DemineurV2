@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Cell } from 'src/cells/entities/cell.entity';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Grid {
@@ -13,4 +14,7 @@ export class Grid {
 
   @Column()
   bombs: number;
+
+  @OneToMany(() => Cell, (cell) => cell.grid)
+  cells: Cell[];
 }

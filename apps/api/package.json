@@ -75,6 +75,9 @@
       "\\.module\\.ts$",
       "\\.entity\\.ts$",
       "main.ts"
-    ]
+    ],
+    "moduleNameMapper": {
+      "^src/(.*)$": "<rootDir>/$1"
+    }
   }
 }
