@@ -21,6 +21,8 @@ export class Cell {
   @Column()
   isOpen: boolean;
 
-  @ManyToOne(() => Grid, (grid) => grid.cells)
+  @ManyToOne(() => Grid, (grid) => grid.cells, {
+    onDelete: 'CASCADE',
+  })
   grid: Grid;
 }

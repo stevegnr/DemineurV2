@@ -25,6 +25,14 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client connecté : ${client.id}`);
   }
 
+  @SubscribeMessage('joinRoom')
+  handleJoinRoom(client: Socket, payload: { roomId: string }) {
+    console.log('payload', payload);
+    const { roomId } = payload;
+    client.join(roomId);
+    console.log(`Client ${client.id} a rejoint la room ${roomId}`);
+  }
+
   @SubscribeMessage('playMove')
   async handlePlayMove(client: Socket, payload: PlayMovePayload) {
     console.log('Coup reçu :', payload);

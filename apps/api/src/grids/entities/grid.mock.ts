@@ -17,6 +17,7 @@ export const mockCreateGridDto: CreateGridDto = {
   height: 10,
   width: 10,
   bombs: 10,
+  roomId: 'a2z3e1',
 };
 
 export const mockUpdateGridDto: UpdateGridDto = {

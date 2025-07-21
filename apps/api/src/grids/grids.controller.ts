@@ -11,7 +11,6 @@ import { GridsService } from './grids.service';
 import { CreateGridDto } from './dto/create-grid.dto';
 import { UpdateGridDto } from './dto/update-grid.dto';
 import { Grid } from './entities/grid.entity';
-import { DeleteResult } from 'typeorm';
 
 @Controller('grids')
 export class GridsController {
@@ -41,7 +40,7 @@ export class GridsController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<DeleteResult> {
+  remove(@Param('id') id: string): Promise<Grid> {
     return this.gridsService.remove(+id);
   }
 }

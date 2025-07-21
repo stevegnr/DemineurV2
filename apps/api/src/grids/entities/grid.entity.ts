@@ -22,7 +22,7 @@ export class Grid {
   @Column()
   bombs: number;
 
-  @OneToMany(() => Cell, (cell) => cell.grid)
+  @OneToMany(() => Cell, (cell) => cell.grid, { cascade: true })
   cells: Cell[];
 
   @ManyToOne(() => Room, (room) => room.grids)

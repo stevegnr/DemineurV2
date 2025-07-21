@@ -1,10 +1,5 @@
 import type { CellType } from "./Cell";
 import Cell from "./Cell";
-// type newGrid = {
-//   height: number;
-//   width: number;
-//   bombs: number;
-// };
 
 type Props = { grid: GridType; onPlayMove: (cell: CellType) => void };
 

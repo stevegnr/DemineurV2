@@ -4,21 +4,56 @@ import type { GridType } from "./Grid";
 import Grid from "./Grid";
 import { io, type Socket } from "socket.io-client";
 import type { CellType } from "./Cell";
+import type { RoomType } from "../App";
+import { useParams } from "react-router-dom";
 
 type newGrid = {
   height: number;
   width: number;
   bombs: number;
+  roomId: string;
 };
 
 function Room() {
+  const { roomId } = useParams<{ roomId: string }>();
+  console.log("roomId", roomId);
+  const [room, setRoom] = useState<RoomType | null>(null);
   const [grid, setGrid] = useState<GridType | null>(null);
   const socketRef = useRef<Socket | null>(null);
+
+  useEffect(() => {
+    if (!roomId) return;
+
+    const getRoom = async () => {
+      try {
+        const response = await fetch("http://localhost:3001/rooms/" + roomId, {
+          method: "GET",
+        });
+
+        if (!response.ok) {
+          console.error(`HTTP error! Status: ${response.status}`);
+          return null;
+        }
+
+        const data: RoomType = await response.json();
+        console.log("data", data);
+        setRoom(data);
+      } catch (error) {
+        console.error("Fetch error:", error);
+      }
+    };
+
+    getRoom();
+  }, [roomId]);
 
   useEffect(() => {
     const socket: Socket = io("http://localhost:3001");
     socketRef.current = socket;
 
+    // Rejoindre une salle
+    socket.emit("joinRoom", { roomId });
+
+    // Écouter les MAJs de la grille
     socket.on("updatedGrid", (updatedGrid) => {
       console.log("updatedGrid", updatedGrid);
       setGrid(updatedGrid);
@@ -27,10 +62,11 @@ function Room() {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [roomId]);
 
   const createGrid = async () => {
-    const args: newGrid = { height: 30, width: 30, bombs: 20 };
+    if (!roomId) return;
+    const args: newGrid = { height: 5, width: 5, bombs: 10, roomId };
     try {
       const response = await fetch("http://localhost:3001/grids", {
         method: "POST",
@@ -56,38 +92,41 @@ function Room() {
       socketRef.current.emit("playMove", {
         cellId: cell.id,
         gridId: grid!.id,
+        roomId: room!.id,
       });
     } else {
       console.warn("Socket non connecté");
     }
   };
 
-  // Temporaire, récupérer la grille automatiquement
-  useEffect(() => {
-    const getGrid = async () => {
-      try {
-        const response = await fetch("http://localhost:3001/grids/5", {
-          method: "GET",
-        });
+  // // Temporaire, récupérer la grille automatiquement
+  // useEffect(() => {
+  //   const getGrid = async () => {
+  //     try {
+  //       const response = await fetch("http://localhost:3001/grids/5", {
+  //         method: "GET",
+  //       });
 
-        if (!response.ok) {
-          console.error(`HTTP error! Status: ${response.status}`);
-          return null;
-        }
+  //       if (!response.ok) {
+  //         console.error(`HTTP error! Status: ${response.status}`);
+  //         return null;
+  //       }
 
-        const data: GridType = await response.json();
-        setGrid(data);
-      } catch (error) {
-        console.error("Fetch error:", error);
-      }
-    };
+  //       const data: GridType = await response.json();
+  //       setGrid(data);
+  //     } catch (error) {
+  //       console.error("Fetch error:", error);
+  //     }
+  //   };
 
-    getGrid();
-  }, []);
+  //   getGrid();
+  // }, []);
 
   return (
     <div>
-      <Button onPress={createGrid}>Créer une grille</Button>
+      <h2>{room ? "Salle : " + room.id : "Création de la salle"}</h2>
+      <p>Lien : http://localhost5173/rooms/{roomId}</p>
+      <Button onPress={createGrid}>Démarrer la partie</Button>
       {grid && (
         <Grid
           grid={grid}

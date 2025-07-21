@@ -107,6 +107,7 @@ describe('GridsService', () => {
       const height = 2;
       const width = 2;
       const bombs = 1;
+      const roomId = '123a';
 
       const mockCells = [
         { x: 1, y: 1, hasBomb: true, isOpen: false, bombsAround: -1 },
@@ -138,6 +139,7 @@ describe('GridsService', () => {
         height,
         width,
         bombs,
+        roomId,
       });
 
       // Assert
