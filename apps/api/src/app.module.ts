@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { GridsModule } from './grids/grids.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { GameGateway } from './game/game.gateway';
 
 @Module({
   imports: [
@@ -22,6 +23,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     GridsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, GameGateway],
 })
 export class AppModule {}

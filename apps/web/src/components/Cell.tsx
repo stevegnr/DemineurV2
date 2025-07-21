@@ -1,5 +1,3 @@
-type Props = { cell: CellType };
-
 export type CellType = {
   id: number;
   x: number;
@@ -9,11 +7,18 @@ export type CellType = {
   isOpen: boolean;
 };
 
-const Cell = ({ cell }: Props) => {
+type Props = { cell: CellType; onPlayMove: (cell: CellType) => void };
+
+const Cell = ({ cell, onPlayMove }: Props) => {
   const { isOpen, hasBomb, bombsAround } = cell;
+
+  const handleClick = () => {
+    onPlayMove(cell);
+  };
 
   return (
     <div
+      onClick={handleClick}
       className={`
         border-2 w-10 h-10 rounded-md text-center text-2xl
         ${isOpen ? "bg-white" : "bg-gray-400 cursor-pointer"}
@@ -22,6 +27,5 @@ const Cell = ({ cell }: Props) => {
     </div>
   );
 };
-
 
 export default Cell;
