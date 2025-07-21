@@ -30,7 +30,10 @@ export class GridsService {
   }
 
   findOne(id: number): Promise<Grid> {
-    return this.gridRepository.findOneBy({ id });
+    return this.gridRepository.findOne({
+      where: { id },
+      relations: { cells: true },
+    });
   }
 
   async update(id: number, updateGridDto: UpdateGridDto): Promise<Grid> {
