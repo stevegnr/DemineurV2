@@ -1,10 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateGridDto } from './dto/create-grid.dto';
 import { UpdateGridDto } from './dto/update-grid.dto';
 import { Grid } from './entities/grid.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
 import { Cell } from 'src/cells/entities/cell.entity';
+import { PayloadCellsOpened } from 'src/game/types';
 
 @Injectable()
 export class GridsService {
@@ -139,5 +144,81 @@ export class GridsService {
     }
 
     return cells;
+  }
+
+  getAdjacentCells(cell: Cell, allCells: Cell[]): Cell[] {
+    const adjacent: Cell[] = [];
+
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        if (dx === 0 && dy === 0) continue; // Ne pas inclure la cellule elle-même
+
+        const neighborX = cell.x + dx;
+        const neighborY = cell.y + dy;
+
+        const neighbor = allCells.find(
+          (c) => c.x === neighborX && c.y === neighborY,
+        );
+
+        if (neighbor) {
+          adjacent.push(neighbor);
+        }
+      }
+    }
+
+    return adjacent;
+  }
+
+  async revealCell(
+    cellId: number,
+    gridId: number,
+  ): Promise<PayloadCellsOpened> {
+    const grid: Grid = await this.gridRepository.findOne({
+      where: { id: gridId },
+      relations: { cells: true },
+    });
+
+    const cellsFiltered: Cell[] = grid.cells.filter(
+      (cell) => cell.id === cellId,
+    );
+
+    if (cellsFiltered.length < 1) {
+      throw new NotFoundException('Cell not in Grid');
+    }
+
+    if (cellsFiltered.length > 1) {
+      throw new InternalServerErrorException(
+        'Several cells in this grid with same Id',
+      );
+    }
+
+    const cell: Cell = cellsFiltered[0];
+
+    const openedCells: Cell[] = [];
+
+    const stack: Cell[] = [cell];
+
+    while (stack.length) {
+      const cell: Cell = stack.pop();
+
+      cell.isOpen = true;
+      openedCells.push(cell);
+
+      if (cell.hasBomb) {
+        // TODO : Ouvrir toutes les cellules
+        return { openedCells, isGameOver: true };
+      } else if (cell.bombsAround === 0) {
+        const adjacentCells: Cell[] = this.getAdjacentCells(cell, grid.cells);
+
+        for (const adj of adjacentCells) {
+          if (!adj.isOpen) stack.push(adj);
+        }
+      }
+    }
+
+    this.cellRepository.save(openedCells);
+    console.log('cell', cell);
+
+    return { openedCells, isGameOver: false };
   }
 }

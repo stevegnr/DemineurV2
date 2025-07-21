@@ -19,7 +19,10 @@ function Room() {
     const socket: Socket = io("http://localhost:3001");
     socketRef.current = socket;
 
-    socket.on("gridUpdate", (updatedGrid) => setGrid(updatedGrid));
+    socket.on("updatedGrid", (updatedGrid) => {
+      console.log("updatedGrid", updatedGrid);
+      setGrid(updatedGrid);
+    });
 
     return () => {
       socket.disconnect();
@@ -52,8 +55,7 @@ function Room() {
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit("playMove", {
         cellId: cell.id,
-        x: cell.x,
-        y: cell.y,
+        gridId: grid!.id,
       });
     } else {
       console.warn("Socket non connecté");

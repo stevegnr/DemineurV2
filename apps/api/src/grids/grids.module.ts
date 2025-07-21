@@ -9,5 +9,6 @@ import { Cell } from 'src/cells/entities/cell.entity';
   imports: [TypeOrmModule.forFeature([Grid, Cell])],
   controllers: [GridsController],
   providers: [GridsService],
+  exports: [GridsService],
 })
 export class GridsModule {}

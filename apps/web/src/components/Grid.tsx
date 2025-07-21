@@ -9,6 +9,7 @@ import Cell from "./Cell";
 type Props = { grid: GridType; onPlayMove: (cell: CellType) => void };
 
 export type GridType = {
+  id: number;
   height: number;
   width: number;
   bombs: number;

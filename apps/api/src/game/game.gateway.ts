@@ -1,3 +1,4 @@
+import { Inject } from '@nestjs/common';
 import {
   OnGatewayConnection,
   OnGatewayDisconnect,
@@ -6,9 +7,13 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { GridsService } from 'src/grids/grids.service';
+import { PayloadCellsOpened, PlayMovePayload } from './types';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  @Inject() gridsService: GridsService;
+
   @WebSocketServer()
   server: Server;
 
@@ -21,12 +26,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('playMove')
-  handlePlayMove(client: Socket, payload: any) {
+  async handlePlayMove(client: Socket, payload: PlayMovePayload) {
     console.log('Coup reçu :', payload);
 
     // Update game
-    const updatedGameState = { text: 'coucou' };
+    const updatedGrid: PayloadCellsOpened = await this.gridsService.revealCell(
+      payload.cellId,
+      payload.gridId,
+    );
 
-    this.server.to(payload.roomId).emit('gameUpdated', updatedGameState);
+    this.server.to(payload.roomId).emit('updatedGrid', updatedGrid);
   }
 }
