@@ -2,6 +2,7 @@ import { DeleteResult } from 'typeorm';
 import { CreateGridDto } from '../dto/create-grid.dto';
 import { UpdateGridDto } from '../dto/update-grid.dto';
 import { Grid } from './grid.entity';
+import { Room } from 'src/rooms/entities/room.entity';
 
 export const mockGrid: Grid = {
   id: 1,
@@ -9,6 +10,7 @@ export const mockGrid: Grid = {
   width: 10,
   bombs: 10,
   cells: [],
+  room: new Room(),
 };
 
 export const mockCreateGridDto: CreateGridDto = {

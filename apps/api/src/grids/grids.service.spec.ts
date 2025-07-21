@@ -25,6 +25,7 @@ describe('GridsService', () => {
     create: jest.fn(),
     save: jest.fn(),
     find: jest.fn(),
+    findOne: jest.fn(),
     findOneBy: jest.fn(),
     preload: jest.fn(),
     delete: jest.fn(),
@@ -175,11 +176,14 @@ describe('GridsService', () => {
 
   describe('findOne', () => {
     it('doit retourner une grille par son id', async () => {
-      mockGridRepository.findOneBy.mockResolvedValue(mockGrid);
+      mockGridRepository.findOne.mockResolvedValue(mockGrid);
 
       const result = await service.findOne(1);
 
-      expect(gridRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
+      expect(gridRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 1 },
+        relations: { cells: true },
+      });
       expect(result).toEqual(mockGrid);
     });
   });

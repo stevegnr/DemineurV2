@@ -1,5 +1,12 @@
 import { Cell } from 'src/cells/entities/cell.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Room } from 'src/rooms/entities/room.entity';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Grid {
@@ -17,4 +24,7 @@ export class Grid {
 
   @OneToMany(() => Cell, (cell) => cell.grid)
   cells: Cell[];
+
+  @ManyToOne(() => Room, (room) => room.grids)
+  room: Room;
 }

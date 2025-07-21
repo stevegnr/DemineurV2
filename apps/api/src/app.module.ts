@@ -5,6 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GridsModule } from './grids/grids.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GameGateway } from './game/game.gateway';
+import { RoomsModule } from './rooms/rooms.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { GameGateway } from './game/game.gateway';
       synchronize: true,
     }),
     GridsModule,
+    RoomsModule,
   ],
   controllers: [AppController],
   providers: [AppService, GameGateway],
