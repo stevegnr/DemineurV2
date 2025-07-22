@@ -26,10 +26,15 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(client: Socket, payload: { roomId: string }) {
+  handleJoinRoom(
+    client: Socket,
+    payload: { roomId: string; playerName?: string },
+  ) {
     const { roomId } = payload;
     client.join(roomId);
     console.log(`Client ${client.id} a rejoint la room ${roomId}`);
+    const newPlayer = { id: client.id, name: payload.playerName ?? 'Invité' };
+    this.server.to(payload.roomId).emit('updatedPlayers', newPlayer);
   }
 
   @SubscribeMessage('playMoves')

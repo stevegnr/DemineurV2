@@ -15,10 +15,15 @@ type newGrid = {
   roomId: string;
 };
 
+type UpdatedPlayersPayload = { id: string; name: string };
+
+type Player = { id: string; name: string };
+
 function Room() {
   const { roomId } = useParams<{ roomId: string }>();
 
   const [room, setRoom] = useState<RoomType | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [grid, setGrid] = useState<GridType | null>(null);
   const [flaggedCells, setFlaggedCells] = useState<CellType[]>([]);
   const [lastCellsPlayed, setLastCellsPlayed] = useState<
@@ -72,6 +77,27 @@ function Room() {
 
     // Rejoindre une salle
     socket.emit("joinRoom", { roomId });
+
+    // Écouter les MAJs des joueurs
+    socket.on("updatedPlayers", (payload: UpdatedPlayersPayload) => {
+      setPlayers((prev) => {
+        const existingPlayer: Player | undefined = prev.find(
+          (p) => p.id === payload.id
+        );
+        if (existingPlayer) {
+          if (existingPlayer.name !== payload.name) {
+            return [
+              ...prev.filter((p) => p.id !== payload.id),
+              { id: payload.id, name: payload.name },
+            ];
+          } else {
+            return prev;
+          }
+        } else {
+          return [...prev, { id: payload.id, name: payload.name }];
+        }
+      });
+    });
 
     // Écouter les MAJs de la grille
     socket.on("updatedGrid", (payload) => {
@@ -138,6 +164,9 @@ function Room() {
   return (
     <div>
       <h2>{room ? "Salle : " + room.id : "Création de la salle"}</h2>
+      {players?.map((p) => (
+        <p key={p.id}>{p.name}</p>
+      ))}
       <p>Lien : http://localhost5173/rooms/{roomId}</p>
       {gameOver && <Button onPress={createGrid}>Démarrer la partie</Button>}
       {grid && (
