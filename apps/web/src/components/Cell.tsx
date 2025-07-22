@@ -66,6 +66,7 @@ const Cell = ({
 
   const handleRightClick = (e: MouseEvent) => {
     e.preventDefault();
+    if (isOpen) return;
 
     setFlaggedCells((prev) => {
       const isAlreadyFlagged: boolean = prev.some(
