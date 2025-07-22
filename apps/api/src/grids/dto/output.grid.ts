@@ -9,4 +9,5 @@ export type OutputCell = {
   y: number;
   isOpen: boolean;
   bombsAround?: number;
+  hasBomb?: boolean;
 };

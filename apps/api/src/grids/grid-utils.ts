@@ -52,16 +52,20 @@ export function generateOutputCells(grid: Grid): OutputCell[] {
 
   for (let y = 1; y <= height; y++) {
     for (let x = 1; x <= width; x++) {
-      const index = (y - 1) * width + (x - 1);
+      const index: number = (y - 1) * width + (x - 1);
 
-      const isOpen = getBit(ouvertures, index);
+      const isOpen: boolean = getBit(ouvertures, index);
 
       let bombsAround: number = undefined;
+      let hasBomb: boolean = undefined;
       if (isOpen) {
         bombsAround = countBombsAround(x, y, width, height, mines);
+        if (getBit(mines, index)) {
+          hasBomb = true;
+        }
       }
 
-      cells.push({ x, y, isOpen, bombsAround });
+      cells.push({ x, y, isOpen, bombsAround, hasBomb });
     }
   }
 
