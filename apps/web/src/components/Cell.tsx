@@ -1,3 +1,5 @@
+import { useState, type MouseEvent } from "react";
+
 export type CellType = {
   id: number;
   x: number;
@@ -12,8 +14,16 @@ type Props = { cell: CellType; onPlayMove: (cell: CellType) => void };
 const Cell = ({ cell, onPlayMove }: Props) => {
   const { isOpen, hasBomb, bombsAround } = cell;
 
+  const [isFlagged, setIsFlagged] = useState<boolean>(false);
+
   const handleClick = () => {
+    if (isFlagged) return;
     onPlayMove(cell);
+  };
+
+  const handleRightClick = (e: MouseEvent) => {
+    e.preventDefault();
+    setIsFlagged((prev) => !prev);
   };
 
   let textColor: string;
@@ -52,12 +62,14 @@ const Cell = ({ cell, onPlayMove }: Props) => {
   return (
     <div
       onClick={handleClick}
+      onContextMenu={handleRightClick}
       className={`
         border-2 border-gray-600 w-10 h-10 rounded-md text-center text-2xl font-bold
         ${isOpen ? "bg-white" : "bg-gray-400 cursor-pointer"}
         
       `}
       style={{ color: isOpen ? textColor : undefined }}>
+      {!isOpen && isFlagged && "🚩"}
       {isOpen ? (hasBomb ? "💥" : bombsAround) : ""}
     </div>
   );
