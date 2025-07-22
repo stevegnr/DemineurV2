@@ -31,7 +31,7 @@ const Grid = ({
   const remainingBombs: number = bombs - flaggedCells.length;
   return (
     <div>
-      <p className="font-bold">
+      <p className={`font-bold ${remainingBombs < 0 && "text-danger-500"}`}>
         {remainingBombs} restantes sur {bombs}
       </p>
       <div

@@ -153,13 +153,15 @@ function Room() {
   };
 
   return (
-    <div>
-      <h2>{room ? "Salle : " + room.id : "Création de la salle"}</h2>
-      {players?.map((p) => (
-        <p key={p.id}>{p.name}</p>
-      ))}
-      <p>Lien : http://localhost5173/rooms/{roomId}</p>
-      {gameOver && <Button onPress={createGrid}>Démarrer la partie</Button>}
+    <div className="flex">
+      <div>
+        <h2>{room ? "Salle : " + room.id : "Création de la salle"}</h2>
+        {players?.map((p) => (
+          <p key={p.id}>{p.name}</p>
+        ))}
+        <p>Lien : http://localhost5173/rooms/{roomId}</p>
+        {gameOver && <Button onPress={createGrid}>Démarrer la partie</Button>}
+      </div>
       {grid && (
         <Grid
           grid={grid}
