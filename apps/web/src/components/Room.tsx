@@ -6,6 +6,7 @@ import { io, type Socket } from "socket.io-client";
 import type { CellType } from "./Cell";
 import type { RoomType } from "../App";
 import { useParams } from "react-router-dom";
+import { updateGrid } from "../utils/room";
 
 type newGrid = {
   height: number;
@@ -55,9 +56,11 @@ function Room() {
     socket.emit("joinRoom", { roomId });
 
     // Écouter les MAJs de la grille
-    socket.on("updatedGrid", (updatedGrid) => {
-      console.log("updatedGrid", updatedGrid);
-      setGrid(updatedGrid);
+    socket.on("updatedGrid", (payload) => {
+      setGrid((currentGrid) => {
+        if (!currentGrid) return currentGrid;
+        return updateGrid(currentGrid, payload.openedCells);
+      });
     });
 
     return () => {
@@ -67,7 +70,7 @@ function Room() {
 
   const createGrid = async () => {
     if (!roomId) return;
-    const args: newGrid = { height: 5, width: 5, bombs: 10, roomId };
+    const args: newGrid = { height: 5, width: 5, bombs: 1, roomId };
     try {
       const response = await fetch("http://localhost:3001/grids", {
         method: "POST",

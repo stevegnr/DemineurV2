@@ -22,7 +22,7 @@ const Grid = ({ grid, onPlayMove }: Props) => {
       {grid?.cells.map((c) => (
         <Cell
           cell={c}
-          key={c.id}
+          key={grid.id + "-" + c.x + "-" + c.y}
           onPlayMove={onPlayMove}
         />
       ))}
