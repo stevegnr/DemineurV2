@@ -1,4 +1,4 @@
-import { useState, type MouseEvent } from "react";
+import { type Dispatch, type MouseEvent, type SetStateAction } from "react";
 
 export type CellType = {
   id: number;
@@ -9,12 +9,19 @@ export type CellType = {
   isOpen: boolean;
 };
 
-type Props = { cell: CellType; onPlayMove: (cell: CellType) => void };
+type Props = {
+  cell: CellType;
+  onPlayMove: (cell: CellType) => void;
+  setFlaggedCells: Dispatch<SetStateAction<CellType[]>>;
+  flaggedCells: CellType[];
+};
 
-const Cell = ({ cell, onPlayMove }: Props) => {
+const Cell = ({ cell, onPlayMove, flaggedCells, setFlaggedCells }: Props) => {
   const { isOpen, hasBomb, bombsAround } = cell;
 
-  const [isFlagged, setIsFlagged] = useState<boolean>(false);
+  const isFlagged: boolean = flaggedCells.some(
+    (fc) => fc.x === cell.x && fc.y === cell.y
+  );
 
   const handleClick = () => {
     if (isFlagged) return;
@@ -23,7 +30,20 @@ const Cell = ({ cell, onPlayMove }: Props) => {
 
   const handleRightClick = (e: MouseEvent) => {
     e.preventDefault();
-    setIsFlagged((prev) => !prev);
+
+    setFlaggedCells((prev) => {
+      const isAlreadyFlagged = prev.some(
+        (fc) => fc.x === cell.x && fc.y === cell.y
+      );
+
+      if (isAlreadyFlagged) {
+        // Retirer le drapeau
+        return prev.filter((fc) => !(fc.x === cell.x && fc.y === cell.y));
+      } else {
+        // Ajouter le drapeau
+        return [...prev, cell];
+      }
+    });
   };
 
   let textColor: string;

@@ -20,6 +20,7 @@ function Room() {
 
   const [room, setRoom] = useState<RoomType | null>(null);
   const [grid, setGrid] = useState<GridType | null>(null);
+  const [flaggedCells, setFlaggedCells] = useState<CellType[]>([]);
 
   const [gameOver, setGameOver] = useState<boolean>(true);
 
@@ -92,6 +93,7 @@ function Room() {
       const data: GridType = await response.json();
       setGrid(data);
       setGameOver(false);
+      setFlaggedCells([]);
     } catch (error) {
       console.error("Fetch error:", error);
     }
@@ -118,6 +120,8 @@ function Room() {
         <Grid
           grid={grid}
           onPlayMove={handlePlayMove}
+          flaggedCells={flaggedCells}
+          setFlaggedCells={setFlaggedCells}
         />
       )}
     </div>
