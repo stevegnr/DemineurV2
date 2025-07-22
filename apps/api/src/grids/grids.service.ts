@@ -187,7 +187,12 @@ export class GridsService {
     }
 
     const stack: { x: number; y: number }[] = [{ x, y }];
-    const openedCells: { x: number; y: number; bombsAround: number }[] = [];
+    const openedCells: {
+      x: number;
+      y: number;
+      bombsAround: number;
+      hasBomb?: boolean;
+    }[] = [];
 
     while (stack.length) {
       const { x, y } = stack.pop();
@@ -200,7 +205,10 @@ export class GridsService {
       const isBomb: boolean = getBit(grid.mines, index);
 
       if (isBomb) {
+        openedCells.push({ x, y, hasBomb: true, bombsAround: -1 });
+
         revealAll(grid.ouvertures);
+
         await this.gridRepository.save(grid);
         return { openedCells, isGameOver: true };
       }
