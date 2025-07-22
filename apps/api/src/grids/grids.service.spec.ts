@@ -10,6 +10,8 @@ import {
   mockUpdateGridDto,
 } from './entities/grid.mock';
 import { Cell } from 'src/cells/entities/cell.entity';
+import { Room } from 'src/rooms/entities/room.entity';
+import * as gridUtils from './grid-utils';
 
 describe('GridsService', () => {
   let service: GridsService;
@@ -40,6 +42,10 @@ describe('GridsService', () => {
     delete: jest.fn(),
   };
 
+  const mockRoomRepository = {
+    findOneBy: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -51,6 +57,10 @@ describe('GridsService', () => {
         {
           provide: getRepositoryToken(Cell),
           useValue: mockCellRepository,
+        },
+        {
+          provide: getRepositoryToken(Room),
+          useValue: mockRoomRepository,
         },
       ],
     }).compile();
@@ -69,99 +79,108 @@ describe('GridsService', () => {
   });
 
   describe('create', () => {
-    it('doit créer une grille avec ses cellules et la sauvegarder', async () => {
-      // Arrange
-      const mockCells = [{ x: 1, y: 1 }] as Partial<Cell>[];
-      const mockCreatedCells = [{ id: 1, x: 1, y: 1 }] as Cell[];
-      const mockGridEntity = { ...mockGrid, cells: mockCreatedCells } as Grid;
+    it('doit créer une grille avec des buffers compactés et renvoyer un OutputGrid', async () => {
+      // Arrange : on prépare les valeurs simulées
+      const mockMines = Buffer.from([0b00001111]);
+      const mockOuvertures = Buffer.from([0b00000000]);
 
-      // Mocker fillGrid
-      jest.spyOn(service, 'fillGrid').mockReturnValue(mockCells);
+      // On espionne fillGrid pour qu’il renvoie nos buffers factices
+      jest.spyOn(service, 'fillGrid').mockReturnValue({
+        mines: mockMines,
+        ouvertures: mockOuvertures,
+      });
 
-      // Mocker cellRepository.create pour retourner les cellules complètes
-      mockCellRepository.create.mockReturnValue(mockCreatedCells);
+      // Simule une Room existante
+      mockRoomRepository.findOneBy.mockResolvedValue({
+        id: mockCreateGridDto.roomId,
+      });
 
-      // Mocker gridRepository.create pour retourner l’entité Grid avec cellules
-      mockGridRepository.create.mockReturnValue(mockGridEntity);
+      // Simule la création de l’entité Grid
+      const mockSavedGrid = {
+        id: 1,
+        height: mockCreateGridDto.height,
+        width: mockCreateGridDto.width,
+        bombs: mockCreateGridDto.bombs,
+        room: { id: mockCreateGridDto.roomId },
+        mines: mockMines,
+        ouvertures: mockOuvertures,
+      };
+      mockGridRepository.create.mockReturnValue(mockSavedGrid);
+      mockGridRepository.save.mockResolvedValue(mockSavedGrid);
 
-      // Mocker save
-      mockGridRepository.save.mockResolvedValue(mockGridEntity);
+      // On espionne la fonction utilitaire pour parser les buffers en cellules
+      jest
+        .spyOn(gridUtils, 'generateOutputCells')
+        .mockReturnValue([
+          { x: 1, y: 1, isOpen: false, bombsAround: undefined },
+        ]);
 
-      // Act
+      // Act : on appelle le service
       const result = await service.create(mockCreateGridDto);
 
-      // Assert
+      // Assert : on vérifie les appels et le résultat
       expect(service.fillGrid).toHaveBeenCalledWith(
         mockCreateGridDto.height,
         mockCreateGridDto.width,
         mockCreateGridDto.bombs,
       );
-
-      expect(mockCellRepository.create).toHaveBeenCalledWith(mockCells);
-      expect(mockGridRepository.save).toHaveBeenCalledWith(mockGridEntity);
-      expect(result).toEqual(mockGridEntity);
+      expect(mockGridRepository.create).toHaveBeenCalledWith({
+        height: mockCreateGridDto.height,
+        width: mockCreateGridDto.width,
+        bombs: mockCreateGridDto.bombs,
+        room: { id: mockCreateGridDto.roomId },
+        mines: mockMines,
+        ouvertures: mockOuvertures,
+      });
+      expect(mockGridRepository.save).toHaveBeenCalledWith(mockSavedGrid);
+      expect(gridUtils.generateOutputCells).toHaveBeenCalledWith(mockSavedGrid);
+      expect(result).toEqual({
+        id: mockSavedGrid.id,
+        height: mockSavedGrid.height,
+        width: mockSavedGrid.width,
+        bombs: mockSavedGrid.bombs,
+        cells: [{ x: 1, y: 1, isOpen: false, bombsAround: undefined }],
+      });
     });
 
-    it('doit créer les cellules avec les bonnes propriétés', async () => {
-      // Arrange
-      const height = 2;
-      const width = 2;
-      const bombs = 1;
-      const roomId = '123a';
+    it('doit appeler fillGrid et parseGridData correctement', async () => {
+      // Arrange : comme avant
+      const mockMines = Buffer.from([0b00001111]);
+      const mockOuvertures = Buffer.from([0b00000000]);
 
-      const mockCells = [
-        { x: 1, y: 1, hasBomb: true, isOpen: false, bombsAround: -1 },
-        { x: 1, y: 2, hasBomb: false, isOpen: false, bombsAround: 1 },
-        { x: 2, y: 1, hasBomb: false, isOpen: false, bombsAround: 1 },
-        { x: 2, y: 2, hasBomb: false, isOpen: false, bombsAround: 1 },
-      ] as Partial<Cell>[];
+      jest.spyOn(service, 'fillGrid').mockReturnValue({
+        mines: mockMines,
+        ouvertures: mockOuvertures,
+      });
 
-      const createdCells = mockCells.map((cell, index) => ({
-        id: index + 1,
-        ...cell,
-      })) as Cell[];
+      mockRoomRepository.findOneBy.mockResolvedValue({
+        id: mockCreateGridDto.roomId,
+      });
 
-      const savedCells = createdCells; // ⏳ Ce qu’on attend de save()
+      const mockSavedGrid = {
+        id: 1,
+        height: mockCreateGridDto.height,
+        width: mockCreateGridDto.width,
+        bombs: mockCreateGridDto.bombs,
+        room: { id: mockCreateGridDto.roomId },
+        mines: mockMines,
+        ouvertures: mockOuvertures,
+      };
+      mockGridRepository.create.mockReturnValue(mockSavedGrid);
+      mockGridRepository.save.mockResolvedValue(mockSavedGrid);
 
-      const gridEntity = {
-        ...mockGrid,
-        cells: savedCells,
-      } as Grid;
-
-      jest.spyOn(service, 'fillGrid').mockReturnValue(mockCells);
-      mockCellRepository.create.mockReturnValue(createdCells);
-      mockCellRepository.save.mockResolvedValue(savedCells); // ✅ Ajout du mock save
-      mockGridRepository.create.mockReturnValue(gridEntity);
-      mockGridRepository.save.mockResolvedValue(gridEntity);
+      jest.spyOn(gridUtils, 'generateOutputCells').mockReturnValue([
+        { x: 1, y: 1, isOpen: false, bombsAround: undefined },
+        { x: 1, y: 2, isOpen: false, bombsAround: undefined },
+      ]);
 
       // Act
-      const result = await service.create({
-        height,
-        width,
-        bombs,
-        roomId,
-      });
+      const result = await service.create(mockCreateGridDto);
 
       // Assert
-      expect(service.fillGrid).toHaveBeenCalledWith(height, width, bombs);
-      expect(mockCellRepository.create).toHaveBeenCalledWith(mockCells);
-      expect(mockCellRepository.save).toHaveBeenCalledWith(createdCells); // ✅ Vérifie save
-      expect(mockGridRepository.create).toHaveBeenCalledWith({
-        height,
-        width,
-        bombs,
-        cells: savedCells,
-      });
-      expect(mockGridRepository.save).toHaveBeenCalledWith(gridEntity);
-      expect(result.cells).toHaveLength(4);
-
-      result.cells.forEach((cell) => {
-        expect(cell).toHaveProperty('x');
-        expect(cell).toHaveProperty('y');
-        expect(cell).toHaveProperty('hasBomb');
-        expect(cell).toHaveProperty('isOpen', false);
-        expect(cell).toHaveProperty('bombsAround');
-      });
+      expect(service.fillGrid).toHaveBeenCalledTimes(1);
+      expect(gridUtils.generateOutputCells).toHaveBeenCalledTimes(1);
+      expect(result.cells).toHaveLength(2);
     });
   });
 
@@ -184,9 +203,14 @@ describe('GridsService', () => {
 
       expect(gridRepository.findOne).toHaveBeenCalledWith({
         where: { id: 1 },
-        relations: { cells: true },
       });
-      expect(result).toEqual(mockGrid);
+      expect(result).toMatchObject({
+        id: 1,
+        width: 10,
+        height: 10,
+        bombs: 10,
+        cells: expect.any(Array),
+      });
     });
   });
 
@@ -246,50 +270,46 @@ describe('GridsService', () => {
     let service: GridsService;
 
     beforeEach(() => {
-      service = new GridsService(/* inject mocks if needed */);
+      service = new GridsService(/* mocks si nécessaire */);
 
       jest.spyOn(service, 'generateBombIndexes').mockImplementation(() => {
-        // Exemple : placer des bombes aux indexes 2 et 5 (indexation 1-based)
-        return new Set([2, 5]);
+        // Exemple : place une bombe à l’index 2 (1-based)
+        return new Set([2]);
       });
     });
 
-    it('doit retourner un tableau plat de Partial<Cell> avec la bonne taille', () => {
+    it('doit créer des buffers mines et ouvertures de la bonne taille', () => {
       const height = 3;
       const width = 3;
-      const bombs = 2;
+      const bombs = 1;
 
-      const result = service.fillGrid(height, width, bombs);
+      const { mines, ouvertures } = service.fillGrid(height, width, bombs);
 
-      expect(result.length).toBe(height * width);
-      result.forEach((cell) => {
-        expect(cell).toHaveProperty('x');
-        expect(cell).toHaveProperty('y');
-        expect(typeof cell.hasBomb).toBe('boolean');
-        expect(cell.isOpen).toBe(false);
-        expect(cell).toHaveProperty('bombsAround');
-      });
+      const nbCases = height * width;
+      const expectedLength = Math.ceil(nbCases / 8);
+
+      expect(mines.length).toBe(expectedLength);
+      expect(ouvertures.length).toBe(expectedLength);
     });
 
-    it('doit définir bombsAround à -1 pour les cellules avec bombe', () => {
-      const result = service.fillGrid(3, 3, 2);
+    it('doit placer correctement les bombes dans le buffer mines', () => {
+      const { mines } = service.fillGrid(3, 3, 1);
 
-      const bombCells = result.filter((c) => c.hasBomb);
-      expect(bombCells.length).toBe(2);
-      bombCells.forEach((cell) => {
-        expect(cell.bombsAround).toBe(-1);
-      });
+      // Bombe à l’index 2 (1-based) → index 1 (0-based)
+      const byteIndex = Math.floor(1 / 8);
+      const bitIndex = 1 % 8;
+
+      const isBombSet = (mines[byteIndex] & (1 << bitIndex)) !== 0;
+
+      expect(isBombSet).toBe(true);
     });
 
-    it('doit calculer correctement le nombre de bombes autour', () => {
-      jest.spyOn(service, 'generateBombIndexes').mockReturnValue(new Set([2]));
+    it('doit laisser le buffer ouvertures vide (tout fermé)', () => {
+      const { ouvertures } = service.fillGrid(3, 3, 1);
 
-      const cells = service.fillGrid(3, 3, 1);
-
-      // Ex: cellule en (1,1) n'a pas de bombe, elle doit compter 1 bombe voisine (celle en index 2 = (1,2))
-      const cell = cells.find((c) => c.x === 1 && c.y === 1);
-      expect(cell.hasBomb).toBe(false);
-      expect(cell.bombsAround).toBe(1);
+      for (const byte of ouvertures) {
+        expect(byte).toBe(0);
+      }
     });
   });
 
@@ -297,7 +317,7 @@ describe('GridsService', () => {
     let service: GridsService;
 
     beforeEach(() => {
-      service = new GridsService(/* mocks inutiles ici */);
+      service = new GridsService();
     });
 
     it('doit générer le bon nombre d’indexes uniques', () => {

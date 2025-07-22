@@ -4,6 +4,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Grid } from 'src/grids/entities/grid.entity';
 import { GridsService } from 'src/grids/grids.service';
 import { Cell } from 'src/cells/entities/cell.entity';
+import { Room } from 'src/rooms/entities/room.entity';
+import { Repository } from 'typeorm';
 
 describe('GameGateway', () => {
   let gateway: GameGateway;
@@ -26,6 +28,10 @@ describe('GameGateway', () => {
             findOne: jest.fn(),
             save: jest.fn(),
           },
+        },
+        {
+          provide: getRepositoryToken(Room),
+          useClass: Repository,
         },
       ],
     }).compile();

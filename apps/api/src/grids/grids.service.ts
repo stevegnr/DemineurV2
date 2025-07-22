@@ -3,7 +3,7 @@ import { CreateGridDto } from './dto/create-grid.dto';
 import { UpdateGridDto } from './dto/update-grid.dto';
 import { Grid } from './entities/grid.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository } from 'typeorm';
 import { Cell } from 'src/cells/entities/cell.entity';
 import { PayloadCellsOpened } from 'src/game/types';
 import { Room } from 'src/rooms/entities/room.entity';
@@ -90,14 +90,12 @@ export class GridsService {
     return this.gridRepository.save(grid);
   }
 
-  async remove(id: number): Promise<Grid> {
-    const grid: Grid = await this.gridRepository.findOne({
-      where: { id },
-    });
+  async remove(id: number): Promise<DeleteResult> {
+    const grid: Grid = await this.gridRepository.findOneBy({ id });
 
     if (!grid) return;
 
-    return this.gridRepository.remove(grid);
+    return this.gridRepository.delete(grid.id);
   }
 
   generateBombIndexes(totalCells: number, totalBombs: number): Set<number> {
