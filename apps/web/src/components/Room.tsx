@@ -19,6 +19,7 @@ function Room() {
   console.log("roomId", roomId);
   const [room, setRoom] = useState<RoomType | null>(null);
   const [grid, setGrid] = useState<GridType | null>(null);
+  console.log("grid", grid);
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -90,7 +91,7 @@ function Room() {
     console.log("Move joué:", cell);
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit("playMove", {
-        cellId: cell.id,
+        cell: { x: cell.x, y: cell.y },
         gridId: grid!.id,
         roomId: room!.id,
       });

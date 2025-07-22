@@ -1,9 +1,10 @@
-import { Cell } from 'src/cells/entities/cell.entity';
-
 export type PlayMovePayload = {
   gridId: number;
-  cellId: number;
+  cell: { x: number; y: number };
   roomId: string;
 };
 
-export type PayloadCellsOpened = { openedCells: Cell[]; isGameOver: boolean };
+export type PayloadCellsOpened = {
+  openedCells: { x: number; y: number; bombsAround: number }[];
+  isGameOver: boolean;
+};

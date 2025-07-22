@@ -39,7 +39,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     // Update game
     const updatedGrid: PayloadCellsOpened = await this.gridsService.revealCell(
-      payload.cellId,
+      payload.cell.x,
+      payload.cell.y,
       payload.gridId,
     );
 

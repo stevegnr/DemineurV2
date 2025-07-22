@@ -9,8 +9,9 @@ export const mockGrid: Grid = {
   height: 10,
   width: 10,
   bombs: 10,
-  cells: [],
   room: new Room(),
+  mines: undefined,
+  ouvertures: undefined,
 };
 
 export const mockCreateGridDto: CreateGridDto = {

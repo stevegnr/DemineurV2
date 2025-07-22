@@ -11,13 +11,14 @@ import { GridsService } from './grids.service';
 import { CreateGridDto } from './dto/create-grid.dto';
 import { UpdateGridDto } from './dto/update-grid.dto';
 import { Grid } from './entities/grid.entity';
+import { OutputGrid } from './dto/output.grid';
 
 @Controller('grids')
 export class GridsController {
   constructor(private readonly gridsService: GridsService) {}
 
   @Post()
-  create(@Body() createGridDto: CreateGridDto): Promise<Grid> {
+  create(@Body() createGridDto: CreateGridDto): Promise<OutputGrid> {
     return this.gridsService.create(createGridDto);
   }
 
@@ -27,7 +28,7 @@ export class GridsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<Grid> {
+  findOne(@Param('id') id: string): Promise<OutputGrid> {
     return this.gridsService.findOne(+id);
   }
 

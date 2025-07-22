@@ -1,12 +1,5 @@
-import { Cell } from 'src/cells/entities/cell.entity';
 import { Room } from 'src/rooms/entities/room.entity';
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  OneToMany,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Grid {
@@ -22,8 +15,11 @@ export class Grid {
   @Column()
   bombs: number;
 
-  @OneToMany(() => Cell, (cell) => cell.grid, { cascade: true })
-  cells: Cell[];
+  @Column({ type: 'blob' })
+  mines: Buffer;
+
+  @Column({ type: 'blob' })
+  ouvertures: Buffer;
 
   @ManyToOne(() => Room, (room) => room.grids)
   room: Room;

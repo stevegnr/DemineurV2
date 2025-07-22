@@ -22,7 +22,7 @@ export class RoomsService {
   findOne(id: string): Promise<Room> {
     return this.roomRepository.findOne({
       where: { id },
-      relations: { grids: { cells: true } },
+      relations: { grids: true },
     });
   }
 

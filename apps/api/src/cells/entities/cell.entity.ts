@@ -1,5 +1,4 @@
-import { Grid } from 'src/grids/entities/grid.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Cell {
@@ -20,9 +19,4 @@ export class Cell {
 
   @Column()
   isOpen: boolean;
-
-  @ManyToOne(() => Grid, (grid) => grid.cells, {
-    onDelete: 'CASCADE',
-  })
-  grid: Grid;
 }
