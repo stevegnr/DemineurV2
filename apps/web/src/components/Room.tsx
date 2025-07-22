@@ -110,6 +110,8 @@ function Room() {
   };
 
   const handlePlayMove = (cell: CellType) => {
+    if (gameOver) return;
+
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit("playMove", {
         cell: { x: cell.x, y: cell.y },
