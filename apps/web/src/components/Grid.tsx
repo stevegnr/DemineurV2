@@ -26,31 +26,55 @@ const Grid = ({
   setFlaggedCells,
   lastCellsPlayed,
 }: Props) => {
-  const { bombs, cells, width } = grid;
+  const { bombs, cells, width, height } = grid;
 
   const remainingBombs: number = bombs - flaggedCells.length;
+
   return (
     <div>
-      <p className={`font-bold ${remainingBombs < 0 && "text-danger-500"}`}>
+      <p className={`font-bold ${remainingBombs < 0 ? "text-danger-500" : ""}`}>
         {remainingBombs} restantes sur {bombs}
       </p>
-      <div
-        className={`grid gap-0 mx-auto`}
-        style={{
-          gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
-          width: "max-content",
-        }}>
-        {grid?.cells.map((c) => (
-          <Cell
-            cell={c}
-            key={grid.id + "-" + c.x + "-" + c.y}
-            onPlayMove={onPlayMove}
-            setFlaggedCells={setFlaggedCells}
-            flaggedCells={flaggedCells}
-            lastCellsPlayed={lastCellsPlayed}
-            allCells={cells}
-          />
-        ))}
+      <div style={{ overflow: "auto" }}>
+        <table className="border-collapse">
+          <tbody>
+            {/* En-tête des colonnes */}
+            <tr>
+              <td></td>
+              {Array.from({ length: width }, (_, i) => (
+                <td
+                  key={`col-${i}`}
+                  className="text-center font-mono px-1">
+                  {i + 1}
+                </td>
+              ))}
+            </tr>
+
+            {/* Lignes de cellules avec numéro de ligne */}
+            {Array.from({ length: height }, (_, rowIndex) => {
+              const rowCells = cells.filter((c) => c.y === rowIndex + 1);
+              return (
+                <tr key={`row-${rowIndex}`}>
+                  <td className="text-right pr-1 font-mono">{rowIndex + 1}</td>
+                  {rowCells.map((c) => (
+                    <td
+                      key={`${grid.id}-${c.x}-${c.y}`}
+                      className="p-0">
+                      <Cell
+                        cell={c}
+                        onPlayMove={onPlayMove}
+                        setFlaggedCells={setFlaggedCells}
+                        flaggedCells={flaggedCells}
+                        lastCellsPlayed={lastCellsPlayed}
+                        allCells={cells}
+                      />
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
