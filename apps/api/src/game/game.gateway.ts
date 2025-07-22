@@ -8,7 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { GridsService } from 'src/grids/grids.service';
-import { PayloadCellsOpened, PlayMovePayload } from './types';
+import { PayloadCellsOpened, PlayMovesPayload } from './types';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -32,12 +32,11 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client ${client.id} a rejoint la room ${roomId}`);
   }
 
-  @SubscribeMessage('playMove')
-  async handlePlayMove(client: Socket, payload: PlayMovePayload) {
+  @SubscribeMessage('playMoves')
+  async handlePlayMoves(client: Socket, payload: PlayMovesPayload) {
     // Update game
-    const updatedGrid: PayloadCellsOpened = await this.gridsService.revealCell(
-      payload.cell.x,
-      payload.cell.y,
+    const updatedGrid: PayloadCellsOpened = await this.gridsService.revealCells(
+      payload.cells,
       payload.gridId,
     );
 

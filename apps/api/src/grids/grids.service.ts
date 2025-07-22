@@ -180,9 +180,8 @@ export class GridsService {
     return adjacent;
   }
 
-  async revealCell(
-    x: number,
-    y: number,
+  async revealCells(
+    cellsToReveal: { x: number; y: number }[],
     gridId: number,
   ): Promise<PayloadCellsOpened> {
     const grid: Grid = await this.gridRepository.findOne({
@@ -195,13 +194,14 @@ export class GridsService {
 
     const { width, height } = grid;
 
-    const index: number = (y - 1) * width + (x - 1);
+    // Filtrer les cellules déjà ouvertes pour ne pas les remettre dans la pile
+    const stack: { x: number; y: number }[] = cellsToReveal.filter(
+      ({ x, y }) => {
+        const index = (y - 1) * width + (x - 1);
+        return !getBit(grid.ouvertures, index);
+      },
+    );
 
-    if (getBit(grid.ouvertures, index)) {
-      return { openedCells: [], isGameOver: false };
-    }
-
-    const stack: { x: number; y: number }[] = [{ x, y }];
     const openedCells: {
       x: number;
       y: number;
@@ -224,7 +224,8 @@ export class GridsService {
         openedCells.push({ x, y, hasBomb: true, bombsAround: -1 });
 
         revealAll(grid.ouvertures);
-        // Ajoute toutes les autres cellules à openedCells
+
+        // Ajoute toutes les cellules ouvertes restantes
         for (let ny = 1; ny <= height; ny++) {
           for (let nx = 1; nx <= width; nx++) {
             const i = (ny - 1) * width + (nx - 1);
@@ -234,11 +235,8 @@ export class GridsService {
                 ? -1
                 : countBombsAround(nx, ny, width, height, grid.mines);
 
-              // Évite d’ajouter la bombe deux fois
-              const alreadyAdded = openedCells.some(
-                (c) => c.x === nx && c.y === ny,
-              );
-              if (!alreadyAdded) {
+              // Évite les doublons
+              if (!openedCells.some((c) => c.x === nx && c.y === ny)) {
                 openedCells.push({
                   x: nx,
                   y: ny,
@@ -249,6 +247,7 @@ export class GridsService {
             }
           }
         }
+
         await this.gridRepository.save(grid);
         return { openedCells, isGameOver: true };
       }
@@ -262,6 +261,7 @@ export class GridsService {
       );
       openedCells.push({ x, y, bombsAround });
 
+      // Si aucun bombes autour, on ajoute les voisins non ouverts dans la pile
       if (bombsAround === 0) {
         for (let dx = -1; dx <= 1; dx++) {
           for (let dy = -1; dy <= 1; dy++) {
@@ -270,7 +270,13 @@ export class GridsService {
             const nx = x + dx;
             const ny = y + dy;
 
-            if (nx >= 1 && nx <= width && ny >= 1 && ny <= height) {
+            if (
+              nx >= 1 &&
+              nx <= width &&
+              ny >= 1 &&
+              ny <= height &&
+              !getBit(grid.ouvertures, (ny - 1) * width + (nx - 1))
+            ) {
               stack.push({ x: nx, y: ny });
             }
           }

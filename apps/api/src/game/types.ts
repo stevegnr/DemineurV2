@@ -1,6 +1,6 @@
-export type PlayMovePayload = {
+export type PlayMovesPayload = {
   gridId: number;
-  cell: { x: number; y: number };
+  cells: { x: number; y: number }[];
   roomId: string;
 };
 

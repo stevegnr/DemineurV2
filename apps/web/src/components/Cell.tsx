@@ -1,4 +1,5 @@
 import { type Dispatch, type MouseEvent, type SetStateAction } from "react";
+import { getAdjacentCells } from "../utils/grid";
 
 export type CellType = {
   id: number;
@@ -11,10 +12,11 @@ export type CellType = {
 
 type Props = {
   cell: CellType;
-  onPlayMove: (cell: CellType) => void;
+  onPlayMove: (cells: CellType[]) => void;
   setFlaggedCells: Dispatch<SetStateAction<CellType[]>>;
   flaggedCells: CellType[];
-  lastCellPlayed: { x: number; y: number };
+  lastCellsPlayed: { x: number; y: number }[];
+  allCells: CellType[];
 };
 
 const Cell = ({
@@ -22,12 +24,14 @@ const Cell = ({
   onPlayMove,
   flaggedCells,
   setFlaggedCells,
-  lastCellPlayed,
+  lastCellsPlayed,
+  allCells,
 }: Props) => {
   const { isOpen, hasBomb, bombsAround, x, y } = cell;
 
-  const isLastPlayed: boolean =
-    x === lastCellPlayed.x && y === lastCellPlayed.y;
+  const isLastPlayed: boolean = lastCellsPlayed.some(
+    (lc) => lc.x === x && lc.y === y
+  );
 
   const isFlagged: boolean = flaggedCells.some(
     (fc) => fc.x === cell.x && fc.y === cell.y
@@ -35,7 +39,29 @@ const Cell = ({
 
   const handleClick = () => {
     if (isFlagged) return;
-    onPlayMove(cell);
+
+    if (isOpen && bombsAround > 0) {
+      const adjCells: CellType[] = getAdjacentCells(x, y, allCells);
+      const flaggedAround: CellType[] = adjCells.filter((ac) =>
+        flaggedCells.some((fc) => fc.x === ac.x && fc.y === ac.y)
+      );
+
+      if (flaggedAround.length === bombsAround) {
+        const toReveal: CellType[] = adjCells.filter((ac) => {
+          const isFlagged: boolean = flaggedCells.some(
+            (fc) => fc.x === ac.x && fc.y === ac.y
+          );
+          return !ac.isOpen && !isFlagged;
+        });
+
+        if (toReveal.length > 0) {
+          onPlayMove(toReveal); // ✅ Passe le tableau
+        }
+        return;
+      }
+    }
+
+    onPlayMove([cell]);
   };
 
   const handleRightClick = (e: MouseEvent) => {

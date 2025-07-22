@@ -21,10 +21,12 @@ function Room() {
   const [room, setRoom] = useState<RoomType | null>(null);
   const [grid, setGrid] = useState<GridType | null>(null);
   const [flaggedCells, setFlaggedCells] = useState<CellType[]>([]);
-  const [lastCellPlayed, setLastCellPlayed] = useState<{
-    x: number;
-    y: number;
-  }>({ x: 0, y: 0 });
+  const [lastCellsPlayed, setLastCellsPlayed] = useState<
+    {
+      x: number;
+      y: number;
+    }[]
+  >([{ x: 0, y: 0 }]);
 
   const [gameOver, setGameOver] = useState<boolean>(true);
 
@@ -109,16 +111,23 @@ function Room() {
     }
   };
 
-  const handlePlayMove = (cell: CellType) => {
+  const handlePlayMoves = (cells: CellType[]) => {
     if (gameOver) return;
 
     if (socketRef.current && socketRef.current.connected) {
-      socketRef.current.emit("playMove", {
-        cell: { x: cell.x, y: cell.y },
+      socketRef.current.emit("playMoves", {
+        cells,
         gridId: grid!.id,
         roomId: room!.id,
       });
-      setLastCellPlayed({ x: cell.x, y: cell.y });
+
+      const lastPlayed: { x: number; y: number }[] = cells.map((c) => {
+        return {
+          x: c.x,
+          y: c.y,
+        };
+      });
+      setLastCellsPlayed(lastPlayed);
     } else {
       console.warn("Socket non connecté");
     }
@@ -134,10 +143,10 @@ function Room() {
       {grid && (
         <Grid
           grid={grid}
-          onPlayMove={handlePlayMove}
+          onPlayMove={handlePlayMoves}
           flaggedCells={flaggedCells}
           setFlaggedCells={setFlaggedCells}
-          lastCellPlayed={lastCellPlayed}
+          lastCellsPlayed={lastCellsPlayed}
         />
       )}
     </div>

@@ -13,10 +13,10 @@ export type GridType = {
 
 type Props = {
   grid: GridType;
-  onPlayMove: (cell: CellType) => void;
+  onPlayMove: (cells: CellType[]) => void;
   setFlaggedCells: Dispatch<SetStateAction<CellType[]>>;
   flaggedCells: CellType[];
-  lastCellPlayed: { x: number; y: number };
+  lastCellsPlayed: { x: number; y: number }[];
 };
 
 const Grid = ({
@@ -24,18 +24,20 @@ const Grid = ({
   onPlayMove,
   flaggedCells,
   setFlaggedCells,
-  lastCellPlayed,
+  lastCellsPlayed,
 }: Props) => {
-  const remainingBombs: number = grid.bombs - flaggedCells.length;
+  const { bombs, cells, width } = grid;
+
+  const remainingBombs: number = bombs - flaggedCells.length;
   return (
     <div>
       <p className="font-bold">
-        {remainingBombs} restantes sur {grid.bombs}
+        {remainingBombs} restantes sur {bombs}
       </p>
       <div
         className={`grid gap-0 mx-auto`}
         style={{
-          gridTemplateColumns: `repeat(${grid.width}, minmax(0, 1fr))`,
+          gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
           width: "max-content",
         }}>
         {grid?.cells.map((c) => (
@@ -45,7 +47,8 @@ const Grid = ({
             onPlayMove={onPlayMove}
             setFlaggedCells={setFlaggedCells}
             flaggedCells={flaggedCells}
-            lastCellPlayed={lastCellPlayed}
+            lastCellsPlayed={lastCellsPlayed}
+            allCells={cells}
           />
         ))}
       </div>
