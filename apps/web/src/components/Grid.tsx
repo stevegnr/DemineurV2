@@ -7,6 +7,7 @@ export type GridType = {
   height: number;
   width: number;
   bombs: number;
+  isGameOver: boolean;
   cells: CellType[];
 };
 

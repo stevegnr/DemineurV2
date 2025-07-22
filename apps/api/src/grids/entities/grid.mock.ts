@@ -12,6 +12,7 @@ export const mockGrid: Grid = {
   room: new Room(),
   mines: undefined,
   ouvertures: undefined,
+  isGameOver: false,
 };
 
 export const mockCreateGridDto: CreateGridDto = {

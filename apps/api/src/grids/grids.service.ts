@@ -63,6 +63,7 @@ export class GridsService {
       width: savedGrid.width,
       bombs: savedGrid.bombs,
       cells,
+      isGameOver: false,
     };
 
     return output;
@@ -79,14 +80,15 @@ export class GridsService {
       throw new NotFoundException('Grid not found');
     }
 
-    const { width, height, bombs } = grid;
+    const { width, height, bombs, isGameOver } = grid;
 
     const output: OutputGrid = {
-      id: grid.id,
+      id,
       width,
       height,
       cells: generateOutputCells(grid),
       bombs,
+      isGameOver,
     };
 
     return output;
@@ -218,6 +220,7 @@ export class GridsService {
       const isBomb: boolean = getBit(grid.mines, index);
 
       if (isBomb) {
+        grid.isGameOver = true;
         openedCells.push({ x, y, hasBomb: true, bombsAround: -1 });
 
         revealAll(grid.ouvertures);

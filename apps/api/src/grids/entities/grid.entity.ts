@@ -21,6 +21,9 @@ export class Grid {
   @Column({ type: 'blob' })
   ouvertures: Buffer;
 
+  @Column({ default: false })
+  isGameOver: boolean;
+
   @ManyToOne(() => Room, (room) => room.grids)
   room: Room;
 }

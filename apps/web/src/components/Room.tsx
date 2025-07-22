@@ -48,10 +48,12 @@ function Room() {
         }
 
         const data: RoomType = await response.json();
-        if (data.grid?.cells && data.grid.cells.length > 0) {
-          console.log("grid!", data.grid);
-          setGrid(data.grid);
-          setGameOver(false);
+        if (data.grid) {
+          setGameOver(data.grid.isGameOver);
+
+          if (data.grid.cells && data.grid.cells.length > 0) {
+            setGrid(data.grid);
+          }
         }
         setRoom(data);
       } catch (error) {
