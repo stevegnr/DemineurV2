@@ -44,6 +44,7 @@ describe('GridsService', () => {
 
   const mockRoomRepository = {
     findOneBy: jest.fn(),
+    findOne: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -91,8 +92,9 @@ describe('GridsService', () => {
       });
 
       // Simule une Room existante
-      mockRoomRepository.findOneBy.mockResolvedValue({
+      mockRoomRepository.findOne.mockResolvedValue({
         id: mockCreateGridDto.roomId,
+        grids: [],
       });
 
       // Simule la création de l’entité Grid
@@ -128,7 +130,7 @@ describe('GridsService', () => {
         height: mockCreateGridDto.height,
         width: mockCreateGridDto.width,
         bombs: mockCreateGridDto.bombs,
-        room: { id: mockCreateGridDto.roomId },
+        room: { id: mockCreateGridDto.roomId, grids: [] },
         mines: mockMines,
         ouvertures: mockOuvertures,
       });

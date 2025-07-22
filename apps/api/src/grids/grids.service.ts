@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateGridDto } from './dto/create-grid.dto';
 import { UpdateGridDto } from './dto/update-grid.dto';
 import { Grid } from './entities/grid.entity';
@@ -30,6 +34,10 @@ export class GridsService {
       relations: { grids: true },
     });
 
+    if (!room) {
+      throw new ConflictException("La salle n'existe pas");
+    }
+
     if (room.grids.length > 0) {
       await Promise.all(room.grids.map((grid) => this.remove(grid.id)));
     }
@@ -57,7 +65,6 @@ export class GridsService {
       cells,
     };
 
-    console.log('output', output);
     return output;
   }
 
