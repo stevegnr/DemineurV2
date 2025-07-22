@@ -152,8 +152,6 @@ function Room() {
     }
   };
 
-  console.log("gameOver", gameOver);
-
   return (
     <div>
       <h2>{room ? "Salle : " + room.id : "Création de la salle"}</h2>

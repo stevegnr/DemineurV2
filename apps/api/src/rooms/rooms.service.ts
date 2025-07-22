@@ -38,6 +38,7 @@ export class RoomsService {
       grid: {
         ...grids[0],
         cells: grids.length > 0 ? generateOutputCells(grids[0]) : [],
+        isGameOver: grids[0]?.isGameOver ?? true,
       },
     };
 
