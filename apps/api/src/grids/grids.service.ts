@@ -221,7 +221,31 @@ export class GridsService {
         openedCells.push({ x, y, hasBomb: true, bombsAround: -1 });
 
         revealAll(grid.ouvertures);
+        // Ajoute toutes les autres cellules à openedCells
+        for (let ny = 1; ny <= height; ny++) {
+          for (let nx = 1; nx <= width; nx++) {
+            const i = (ny - 1) * width + (nx - 1);
+            if (getBit(grid.ouvertures, i)) {
+              const hasBomb = getBit(grid.mines, i);
+              const bombsAround = hasBomb
+                ? -1
+                : countBombsAround(nx, ny, width, height, grid.mines);
 
+              // Évite d’ajouter la bombe deux fois
+              const alreadyAdded = openedCells.some(
+                (c) => c.x === nx && c.y === ny,
+              );
+              if (!alreadyAdded) {
+                openedCells.push({
+                  x: nx,
+                  y: ny,
+                  bombsAround,
+                  hasBomb: hasBomb || undefined,
+                });
+              }
+            }
+          }
+        }
         await this.gridRepository.save(grid);
         return { openedCells, isGameOver: true };
       }

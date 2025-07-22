@@ -14,10 +14,20 @@ type Props = {
   onPlayMove: (cell: CellType) => void;
   setFlaggedCells: Dispatch<SetStateAction<CellType[]>>;
   flaggedCells: CellType[];
+  lastCellPlayed: { x: number; y: number };
 };
 
-const Cell = ({ cell, onPlayMove, flaggedCells, setFlaggedCells }: Props) => {
-  const { isOpen, hasBomb, bombsAround } = cell;
+const Cell = ({
+  cell,
+  onPlayMove,
+  flaggedCells,
+  setFlaggedCells,
+  lastCellPlayed,
+}: Props) => {
+  const { isOpen, hasBomb, bombsAround, x, y } = cell;
+
+  const isLastPlayed: boolean =
+    x === lastCellPlayed.x && y === lastCellPlayed.y;
 
   const isFlagged: boolean = flaggedCells.some(
     (fc) => fc.x === cell.x && fc.y === cell.y
@@ -90,7 +100,9 @@ const Cell = ({ cell, onPlayMove, flaggedCells, setFlaggedCells }: Props) => {
       `}
       style={{ color: isOpen ? textColor : undefined }}>
       {!isOpen && isFlagged && "🚩"}
-      {isOpen ? (hasBomb ? "💥" : bombsAround) : ""}
+      {isOpen && hasBomb && isLastPlayed && "💥"}
+      {isOpen && hasBomb && !isLastPlayed && "💣"}
+      {isOpen && !hasBomb && bombsAround}
     </div>
   );
 };

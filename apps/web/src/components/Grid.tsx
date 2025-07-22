@@ -15,9 +15,16 @@ type Props = {
   onPlayMove: (cell: CellType) => void;
   setFlaggedCells: Dispatch<SetStateAction<CellType[]>>;
   flaggedCells: CellType[];
+  lastCellPlayed: { x: number; y: number };
 };
 
-const Grid = ({ grid, onPlayMove, flaggedCells, setFlaggedCells }: Props) => {
+const Grid = ({
+  grid,
+  onPlayMove,
+  flaggedCells,
+  setFlaggedCells,
+  lastCellPlayed,
+}: Props) => {
   const remainingBombs: number = grid.bombs - flaggedCells.length;
   return (
     <div>
@@ -37,6 +44,7 @@ const Grid = ({ grid, onPlayMove, flaggedCells, setFlaggedCells }: Props) => {
             onPlayMove={onPlayMove}
             setFlaggedCells={setFlaggedCells}
             flaggedCells={flaggedCells}
+            lastCellPlayed={lastCellPlayed}
           />
         ))}
       </div>
