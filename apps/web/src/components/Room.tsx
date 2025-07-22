@@ -17,10 +17,10 @@ type newGrid = {
 
 function Room() {
   const { roomId } = useParams<{ roomId: string }>();
-  console.log("roomId", roomId);
+
   const [room, setRoom] = useState<RoomType | null>(null);
   const [grid, setGrid] = useState<GridType | null>(null);
-  console.log("grid", grid);
+
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -38,7 +38,9 @@ function Room() {
         }
 
         const data: RoomType = await response.json();
-        console.log("data", data);
+        if (data.grid) {
+          setGrid(data.grid);
+        }
         setRoom(data);
       } catch (error) {
         console.error("Fetch error:", error);

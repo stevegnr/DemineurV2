@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export type RoomType = {
   id: string;
-  grids?: GridType[];
+  grid?: GridType;
 };
 
 function App() {

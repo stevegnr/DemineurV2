@@ -23,10 +23,16 @@ export class GridsService {
   @InjectRepository(Cell) cellRepository: Repository<Cell>;
 
   async create(createGridDto: CreateGridDto): Promise<OutputGrid> {
-    console.log('createGridDto', createGridDto);
     const { height, width, bombs, roomId } = createGridDto;
 
-    const room: Room = await this.roomRepository.findOneBy({ id: roomId });
+    const room: Room = await this.roomRepository.findOne({
+      where: { id: roomId },
+      relations: { grids: true },
+    });
+
+    if (room.grids.length > 0) {
+      await Promise.all(room.grids.map((grid) => this.remove(grid.id)));
+    }
 
     const { mines, ouvertures } = this.fillGrid(height, width, bombs);
 

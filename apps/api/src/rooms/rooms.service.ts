@@ -4,6 +4,8 @@ import { UpdateRoomDto } from './dto/update-room.dto';
 import { Room } from './entities/room.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository } from 'typeorm';
+import { generateOutputCells } from 'src/grids/grid-utils';
+import { OutputRoom } from './dto/Output.room';
 
 @Injectable()
 export class RoomsService {
@@ -19,11 +21,23 @@ export class RoomsService {
     return this.roomRepository.find();
   }
 
-  findOne(id: string): Promise<Room> {
-    return this.roomRepository.findOne({
+  async findOne(id: string): Promise<OutputRoom> {
+    const room: Room = await this.roomRepository.findOne({
       where: { id },
       relations: { grids: true },
     });
+
+    const { grids, ...roomWithoutGrids } = room;
+
+    const output: OutputRoom = {
+      ...roomWithoutGrids,
+      grid: {
+        ...grids[0],
+        cells: generateOutputCells(grids[0]),
+      },
+    };
+
+    return output;
   }
 
   async update(id: string, updateRoomDto: UpdateRoomDto): Promise<Room> {
