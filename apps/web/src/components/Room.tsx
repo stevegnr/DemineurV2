@@ -31,9 +31,12 @@ function Room() {
 
     const getRoom = async () => {
       try {
-        const response = await fetch("http://localhost:3001/rooms/" + roomId, {
-          method: "GET",
-        });
+        const response: Response = await fetch(
+          "http://localhost:3001/rooms/" + roomId,
+          {
+            method: "GET",
+          }
+        );
 
         if (!response.ok) {
           console.error(`HTTP error! Status: ${response.status}`);
@@ -41,7 +44,8 @@ function Room() {
         }
 
         const data: RoomType = await response.json();
-        if (data.grid) {
+        if (data.grid?.cells && data.grid.cells.length > 0) {
+          console.log("grid!", data.grid);
           setGrid(data.grid);
           setGameOver(false);
         }
@@ -110,6 +114,8 @@ function Room() {
       console.warn("Socket non connecté");
     }
   };
+
+  console.log("gameOver", gameOver);
 
   return (
     <div>

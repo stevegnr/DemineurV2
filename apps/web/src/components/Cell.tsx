@@ -32,7 +32,7 @@ const Cell = ({ cell, onPlayMove, flaggedCells, setFlaggedCells }: Props) => {
     e.preventDefault();
 
     setFlaggedCells((prev) => {
-      const isAlreadyFlagged = prev.some(
+      const isAlreadyFlagged: boolean = prev.some(
         (fc) => fc.x === cell.x && fc.y === cell.y
       );
 

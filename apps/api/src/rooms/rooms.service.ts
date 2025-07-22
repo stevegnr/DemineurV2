@@ -33,7 +33,7 @@ export class RoomsService {
       ...roomWithoutGrids,
       grid: {
         ...grids[0],
-        cells: generateOutputCells(grids[0]),
+        cells: grids.length > 0 ? generateOutputCells(grids[0]) : [],
       },
     };
 
