@@ -29,13 +29,13 @@ const Cell = ({ cell, onPlayMove }: Props) => {
       textColor = "red";
       break;
     case 4:
-      textColor = "orange";
+      textColor = "#000084";
       break;
     case 5:
-      textColor = "yellow";
+      textColor = "darkblue";
       break;
     case 6:
-      textColor = "violet";
+      textColor = "darkslategrey";
       break;
     case 7:
       textColor = "brown";
