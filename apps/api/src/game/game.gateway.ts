@@ -9,10 +9,12 @@ import {
 import { Server, Socket } from 'socket.io';
 import { GridsService } from 'src/grids/grids.service';
 import { PayloadCellsOpened, PlayMovesPayload } from './types';
+import { RoomsService } from 'src/rooms/rooms.service';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @Inject() gridsService: GridsService;
+  @Inject() roomsService: RoomsService;
 
   @WebSocketServer()
   server: Server;
@@ -22,7 +24,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   handleDisconnect(client: Socket) {
-    console.log(`Client connecté : ${client.id}`);
+    console.log(`Client déconnecté : ${client.id}`);
+    this.roomsService.removePlayerEverywhere(client.id, this.server);
   }
 
   @SubscribeMessage('joinRoom')
@@ -33,8 +36,23 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const { roomId } = payload;
     client.join(roomId);
     console.log(`Client ${client.id} a rejoint la room ${roomId}`);
+
     const newPlayer = { id: client.id, name: payload.playerName ?? 'Invité' };
-    this.server.to(payload.roomId).emit('updatedPlayers', newPlayer);
+
+    this.roomsService.addPlayer(roomId, newPlayer);
+
+    // Broadcast toute la liste mise à jour
+    const players = this.roomsService.getPlayers(roomId);
+    this.server.to(roomId).emit('updatedPlayers', players);
+  }
+
+  @SubscribeMessage('leaveRoom')
+  handleLeaveRoom(client: Socket, payload: { roomId: string }) {
+    this.roomsService.removePlayer(payload.roomId, client.id);
+
+    // Broadcast toute la liste mise à jour
+    const players = this.roomsService.getPlayers(payload.roomId);
+    this.server.to(payload.roomId).emit('updatedPlayers', players);
   }
 
   @SubscribeMessage('playMoves')

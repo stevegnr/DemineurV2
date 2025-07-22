@@ -15,7 +15,7 @@ type newGrid = {
   roomId: string;
 };
 
-type UpdatedPlayersPayload = { id: string; name: string };
+type UpdatedPlayersPayload = { id: string; name: string }[];
 
 type Player = { id: string; name: string };
 
@@ -80,23 +80,7 @@ function Room() {
 
     // Écouter les MAJs des joueurs
     socket.on("updatedPlayers", (payload: UpdatedPlayersPayload) => {
-      setPlayers((prev) => {
-        const existingPlayer: Player | undefined = prev.find(
-          (p) => p.id === payload.id
-        );
-        if (existingPlayer) {
-          if (existingPlayer.name !== payload.name) {
-            return [
-              ...prev.filter((p) => p.id !== payload.id),
-              { id: payload.id, name: payload.name },
-            ];
-          } else {
-            return prev;
-          }
-        } else {
-          return [...prev, { id: payload.id, name: payload.name }];
-        }
-      });
+      setPlayers(payload);
     });
 
     // Écouter les MAJs de la grille
@@ -108,8 +92,17 @@ function Room() {
       });
     });
 
+    // 👉 Déconnexion propre si l'onglet ferme
+    const handleBeforeUnload = () => {
+      socket.emit("leaveRoom", { roomId });
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
     return () => {
+      socket.emit("leaveRoom", { roomId });
       socket.disconnect();
+      window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [roomId]);
 
