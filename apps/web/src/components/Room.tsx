@@ -21,6 +21,8 @@ function Room() {
   const [room, setRoom] = useState<RoomType | null>(null);
   const [grid, setGrid] = useState<GridType | null>(null);
 
+  const [gameOver, setGameOver] = useState<boolean>(true);
+
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
@@ -40,6 +42,7 @@ function Room() {
         const data: RoomType = await response.json();
         if (data.grid) {
           setGrid(data.grid);
+          setGameOver(false);
         }
         setRoom(data);
       } catch (error) {
@@ -59,6 +62,7 @@ function Room() {
 
     // Écouter les MAJs de la grille
     socket.on("updatedGrid", (payload) => {
+      if (payload.isGameOver) setGameOver(true);
       setGrid((currentGrid) => {
         if (!currentGrid) return currentGrid;
         return updateGrid(currentGrid, payload.openedCells);
@@ -72,7 +76,7 @@ function Room() {
 
   const createGrid = async () => {
     if (!roomId) return;
-    const args: newGrid = { height: 20, width: 20, bombs: 120, roomId };
+    const args: newGrid = { height: 20, width: 20, bombs: 90, roomId };
     try {
       const response = await fetch("http://localhost:3001/grids", {
         method: "POST",
@@ -87,13 +91,13 @@ function Room() {
 
       const data: GridType = await response.json();
       setGrid(data);
+      setGameOver(false);
     } catch (error) {
       console.error("Fetch error:", error);
     }
   };
 
   const handlePlayMove = (cell: CellType) => {
-    console.log("Move joué:", cell);
     if (socketRef.current && socketRef.current.connected) {
       socketRef.current.emit("playMove", {
         cell: { x: cell.x, y: cell.y },
@@ -105,34 +109,11 @@ function Room() {
     }
   };
 
-  // // Temporaire, récupérer la grille automatiquement
-  // useEffect(() => {
-  //   const getGrid = async () => {
-  //     try {
-  //       const response = await fetch("http://localhost:3001/grids/5", {
-  //         method: "GET",
-  //       });
-
-  //       if (!response.ok) {
-  //         console.error(`HTTP error! Status: ${response.status}`);
-  //         return null;
-  //       }
-
-  //       const data: GridType = await response.json();
-  //       setGrid(data);
-  //     } catch (error) {
-  //       console.error("Fetch error:", error);
-  //     }
-  //   };
-
-  //   getGrid();
-  // }, []);
-
   return (
     <div>
       <h2>{room ? "Salle : " + room.id : "Création de la salle"}</h2>
       <p>Lien : http://localhost5173/rooms/{roomId}</p>
-      <Button onPress={createGrid}>Démarrer la partie</Button>
+      {gameOver && <Button onPress={createGrid}>Démarrer la partie</Button>}
       {grid && (
         <Grid
           grid={grid}
