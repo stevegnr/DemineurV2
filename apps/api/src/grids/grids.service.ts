@@ -120,7 +120,7 @@ export class GridsService {
     const bombIndexes = new Set<number>();
 
     while (bombIndexes.size < totalBombs) {
-      bombIndexes.add(Math.floor(Math.random() * totalCells));
+      bombIndexes.add(Math.floor(Math.random() * totalCells) + 1);
     }
 
     return bombIndexes;
@@ -144,9 +144,8 @@ export class GridsService {
     for (let y = 1; y <= height; y++) {
       for (let x = 1; x <= width; x++) {
         if (bombIndexes.has(index + 1)) {
-          // ton ancien index démarrait à 1
-          const byteIndex = Math.floor(index / 8);
-          const bitIndex = index % 8;
+          const byteIndex: number = Math.floor(index / 8);
+          const bitIndex: number = index % 8;
           mines[byteIndex] |= 1 << bitIndex;
         }
         index++;

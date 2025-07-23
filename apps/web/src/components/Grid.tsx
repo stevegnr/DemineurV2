@@ -32,6 +32,7 @@ const Grid = ({
 
   return (
     <div>
+      <h3>Grille n° : {grid.id}</h3>
       <p className={`font-bold ${remainingBombs < 0 ? "text-danger-500" : ""}`}>
         {remainingBombs} restantes sur {bombs}
       </p>

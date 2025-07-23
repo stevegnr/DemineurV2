@@ -71,3 +71,32 @@ export function generateOutputCells(grid: Grid): OutputCell[] {
 
   return cells;
 }
+
+// /**
+//  * @param bombsBuffer Le Buffer (bitmap) des bombes (1 bit par cellule)
+//  * @param width Largeur de la grille
+//  * @param height Hauteur de la grille
+//  * @returns Liste des coordonnées { x, y } où il y a une bombe
+//  */
+// export function getBombCoordinates(
+//   bombsBuffer: Buffer,
+//   width: number,
+//   height: number,
+// ): { x: number; y: number }[] {
+//   const result: { x: number; y: number }[] = [];
+//   const totalCells = width * height;
+
+//   for (let index = 0; index < totalCells; index++) {
+//     const byteIndex = Math.floor(index / 8);
+//     const bitIndex = index % 8;
+//     const hasBomb = (bombsBuffer[byteIndex] & (1 << bitIndex)) !== 0;
+
+//     if (hasBomb) {
+//       const x = index % width;
+//       const y = Math.floor(index / width);
+//       result.push({ x, y });
+//     }
+//   }
+
+//   return result;
+// }

@@ -108,7 +108,7 @@ function Room() {
 
   const createGrid = async () => {
     if (!roomId) return;
-    const args: newGrid = { height: 20, width: 20, bombs: 90, roomId };
+    const args: newGrid = { height: 20, width: 20, bombs: 80, roomId };
     try {
       const response = await fetch("http://localhost:3001/grids", {
         method: "POST",
