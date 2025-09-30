@@ -5,19 +5,20 @@ Recréer un jeu de démineur multijoueur comme https://minesweeper-multiplayer.d
 
 ## Avancée du projet
 ### Démineur 1 joueur
-- Créer une grille
-- Remplir la grille avec les bombes
-- Remplir la grille avec les cases adjacentes (les chiffres pour indiquer le nombre de bombes)
-- Ouvrir une case au clic
-- Si la case contient une bombe, défaite
-- Si la case contient un chiffre, continuer
-- Si la case ne contient rien, ouvrir les cases adjacentes (récursivité)
+- Créer une grille ✅
+- Remplir la grille avec les bombes ✅
+- Remplir la grille avec les cases adjacentes (les chiffres pour indiquer le nombre de bombes) ✅
+- Ouvrir une case au clic ✅
+- Si la case contient une bombe, défaite ✅
+- Si la case contient un chiffre, continuer ✅
+- Si la case ne contient rien, ouvrir les cases adjacentes (récursivité) ✅
 - Si le joueur ouvre toutes les cases sauf les bombes, victoire
 - Redémarrer le jeu
+- Au clic droit, ajouter un drapeau sur une case. Si on clique sur une case qui a suffisament de drapeaux autour, ouvrir les autres cases ✅
 
 ### Démineur multijoueur
-- Créer une "room"
-- Les joueurs peuvent rejoindre la room
+- Créer une "room" ✅
+- Les joueurs peuvent rejoindre la room ✅
 - Si la case contient un drapeau, continuer
 - Si la case contient un chiffre, c'est à l'autre joueur de jouer
 - Si la case ne contient rien, ouvrir les cases adjacentes (récursivité), et c'est à l'autre joueur de jouer
