@@ -5,6 +5,8 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Room from "./components/Room.tsx";
 import App from "./App.tsx";
 
+document.addEventListener("contextmenu", (e) => e.preventDefault());
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
