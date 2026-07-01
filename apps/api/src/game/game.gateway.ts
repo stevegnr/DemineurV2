@@ -65,9 +65,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server
       .to(payload.roomId)
       .emit('gameState', { mode, currentTurn, scores });
-    this.server
-      .to(payload.roomId)
-      .emit('gameStarted', { grid: payload.grid });
+    this.server.to(payload.roomId).emit('gameStarted', { grid: payload.grid });
   }
 
   @SubscribeMessage('leaveRoom')
