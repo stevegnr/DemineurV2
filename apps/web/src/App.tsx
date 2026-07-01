@@ -20,6 +20,9 @@ function App() {
   const [currentRoomId] = useState<string | null>(
     () => localStorage.getItem("currentRoomId")
   );
+  const [currentRoomMode] = useState<"1player" | "2players" | null>(
+    () => localStorage.getItem("currentRoomMode") as "1player" | "2players" | null
+  );
 
   const handleCreateRoom = async () => {
     const name = playerName.trim() || "Invité";
@@ -101,8 +104,20 @@ function App() {
       {currentRoomId && (
         <button
           onClick={() => navigate(`/rooms/${currentRoomId}`)}
-          className="text-sm text-gray-500 hover:text-gray-700 underline">
-          Reprendre la partie en cours →
+          className={`w-64 text-left px-4 py-3 rounded-xl border-2 transition-colors ${
+            currentRoomMode === "2players"
+              ? "border-green-400 bg-green-50 hover:bg-green-100"
+              : "border-blue-400 bg-blue-50 hover:bg-blue-100"
+          }`}>
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-0.5">
+            Partie en cours
+          </p>
+          <p className="font-bold text-gray-800">
+            {currentRoomMode === "2players" ? "2 Joueurs" : "1 Joueur"}
+          </p>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Reprendre →
+          </p>
         </button>
       )}
     </div>

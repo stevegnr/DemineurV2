@@ -64,6 +64,7 @@ function Room() {
         }
 
         const data: RoomType = await response.json();
+        localStorage.setItem("currentRoomMode", data.mode);
         if (data.grid) {
           setGameOver(data.grid.isGameOver);
           if (data.grid.cells && data.grid.cells.length > 0) {
