@@ -58,6 +58,9 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('newGame')
   handleNewGame(client: Socket, payload: { roomId: string; grid: unknown }) {
+    // Vérifier que le client est membre de la room avant de reset
+    if (!client.rooms.has(payload.roomId)) return;
+
     this.roomsService.resetGame(payload.roomId);
     const mode = this.roomsService.getMode(payload.roomId);
     const currentTurn = this.roomsService.getCurrentTurn(payload.roomId);
@@ -78,8 +81,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('playMoves')
   async handlePlayMoves(client: Socket, payload: PlayMovesPayload) {
-    console.log('payload', payload);
-    const mode = this.roomsService.getMode(payload.roomId);
+    // Utilise getRoomMode (avec fallback DB) pour résister aux redémarrages serveur
+    const mode = await this.roomsService.getRoomMode(payload.roomId);
 
     if (mode === '2players') {
       const currentTurn = this.roomsService.getCurrentTurn(payload.roomId);
@@ -101,7 +104,8 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       ).length;
       if (bombsFound > 0) {
         this.roomsService.addScore(payload.roomId, client.id, bombsFound);
-      } else {
+      } else if (!updatedGrid.isWin) {
+        // Ne pas avancer le tour si la partie vient de se terminer
         this.roomsService.nextTurn(payload.roomId);
       }
     }

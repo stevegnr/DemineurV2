@@ -120,6 +120,7 @@ function Room() {
       setGameOver(false);
       setFlaggedCells([]);
       setGameWonData(null);
+      setLastCellsPlayed([{ x: 0, y: 0 }]);
     });
 
     socket.on("gameWon", (payload: GameWonPayload) => {
@@ -162,10 +163,15 @@ function Room() {
 
       const data: GridType = await response.json();
 
+      // Mise à jour locale immédiate (fallback si socket momentanément déconnecté)
+      setGrid(data);
+      setGameOver(false);
+      setFlaggedCells([]);
+      setGameWonData(null);
+      setLastCellsPlayed([{ x: 0, y: 0 }]);
+
       // Diffuse la grille à tous les joueurs de la salle (synchronise le gridId)
-      if (socketRef.current?.connected) {
-        socketRef.current.emit("newGame", { roomId, grid: data });
-      }
+      socketRef.current?.emit("newGame", { roomId, grid: data });
     } catch (error) {
       console.error("Fetch error:", error);
     }
