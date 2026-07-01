@@ -44,25 +44,26 @@ const Cell = ({
   const handleClick = () => {
     if (disabled || isFlagged) return;
 
-    if (isOpen && bombsAround > 0) {
-      const adjCells: CellType[] = getAdjacentCells(x, y, allCells);
-      const flaggedAround: CellType[] = adjCells.filter((ac) =>
-        flaggedCells.some((fc) => fc.x === ac.x && fc.y === ac.y)
-      );
-
-      if (flaggedAround.length === bombsAround) {
-        const toReveal: CellType[] = adjCells.filter((ac) => {
-          const isFlagged: boolean = flaggedCells.some(
-            (fc) => fc.x === ac.x && fc.y === ac.y
-          );
-          return !ac.isOpen && !isFlagged;
-        });
-
-        if (toReveal.length > 0) {
-          onPlayMove(toReveal); // ✅ Passe le tableau
+    if (isOpen) {
+      // Chord-click : ouvrir les voisins si assez de drapeaux autour
+      if (bombsAround > 0) {
+        const adjCells: CellType[] = getAdjacentCells(x, y, allCells);
+        const flaggedAround: CellType[] = adjCells.filter((ac) =>
+          flaggedCells.some((fc) => fc.x === ac.x && fc.y === ac.y)
+        );
+        if (flaggedAround.length === bombsAround) {
+          const toReveal: CellType[] = adjCells.filter((ac) => {
+            const isFlagged: boolean = flaggedCells.some(
+              (fc) => fc.x === ac.x && fc.y === ac.y
+            );
+            return !ac.isOpen && !isFlagged;
+          });
+          if (toReveal.length > 0) {
+            onPlayMove(toReveal);
+          }
         }
-        return;
       }
+      return; // Case déjà ouverte → ne pas émettre si chord-click non déclenché
     }
 
     onPlayMove([cell]);

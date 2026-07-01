@@ -19,9 +19,9 @@ Recréer un jeu de démineur multijoueur comme https://minesweeper-multiplayer.d
 ### Démineur multijoueur
 - Créer une "room" ✅
 - Les joueurs peuvent rejoindre la room ✅
-- Si la case contient un drapeau, continuer
-- Si la case contient un chiffre, c'est à l'autre joueur de jouer
-- Si la case ne contient rien, ouvrir les cases adjacentes (récursivité), et c'est à l'autre joueur de jouer
+- Si la case contient un drapeau, continuer ✅
+- Si la case contient un chiffre, c'est à l'autre joueur de jouer ✅
+- Si la case ne contient rien, ouvrir les cases adjacentes (récursivité), et c'est à l'autre joueur de jouer ✅
 - Le premier joueur à atteindre le seuil pour vaincre, victoire
 Par exemple, à deux joueurs et pour 51 drapeaux, le premier joueur atteignant 26 drapeaux ((50/2) + 1) gagne
 - Demande de revanche

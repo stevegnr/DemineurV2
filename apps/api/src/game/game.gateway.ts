@@ -111,7 +111,7 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
       mode,
     );
 
-    if (mode === '2players') {
+    if (mode === '2players' && updatedGrid.openedCells.length > 0) {
       const bombsFound = updatedGrid.openedCells.filter(
         (c) => c.hasBomb,
       ).length;
