@@ -17,6 +17,9 @@ function App() {
   const [playerName, setPlayerName] = useState<string>(
     localStorage.getItem("playerName") ?? ""
   );
+  const [currentRoomId] = useState<string | null>(
+    () => localStorage.getItem("currentRoomId")
+  );
 
   const handleCreateRoom = async () => {
     const name = playerName.trim() || "Invité";
@@ -94,6 +97,14 @@ function App() {
       </div>
 
       <Button onPress={handleCreateRoom}>Créer une salle</Button>
+
+      {currentRoomId && (
+        <button
+          onClick={() => navigate(`/rooms/${currentRoomId}`)}
+          className="text-sm text-gray-500 hover:text-gray-700 underline">
+          Reprendre la partie en cours →
+        </button>
+      )}
     </div>
   );
 }

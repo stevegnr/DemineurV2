@@ -18,6 +18,7 @@ type Props = {
   flaggedCells: CellType[];
   lastCellsPlayed: { x: number; y: number }[];
   disabled?: boolean;
+  is2Player?: boolean;
 };
 
 const Grid = ({
@@ -27,6 +28,7 @@ const Grid = ({
   setFlaggedCells,
   lastCellsPlayed,
   disabled = false,
+  is2Player = false,
 }: Props) => {
   const { bombs, cells, width, height } = grid;
 
@@ -71,6 +73,7 @@ const Grid = ({
                         lastCellsPlayed={lastCellsPlayed}
                         allCells={cells}
                         disabled={disabled}
+                        is2Player={is2Player}
                       />
                     </td>
                   ))}

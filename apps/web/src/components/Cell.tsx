@@ -18,6 +18,7 @@ type Props = {
   lastCellsPlayed: { x: number; y: number }[];
   allCells: CellType[];
   disabled?: boolean;
+  is2Player?: boolean;
 };
 
 const Cell = ({
@@ -28,6 +29,7 @@ const Cell = ({
   lastCellsPlayed,
   allCells,
   disabled = false,
+  is2Player = false,
 }: Props) => {
   const { isOpen, hasBomb, bombsAround, x, y } = cell;
 
@@ -129,8 +131,7 @@ const Cell = ({
       `}
       style={{ color: isOpen ? textColor : undefined }}>
       {!isOpen && isFlagged && "🚩"}
-      {isOpen && hasBomb && isLastPlayed && "💥"}
-      {isOpen && hasBomb && !isLastPlayed && "💣"}
+      {isOpen && hasBomb && (is2Player ? "🚩" : isLastPlayed ? "💥" : "💣")}
       {isOpen && !hasBomb && bombsAround}
     </div>
   );

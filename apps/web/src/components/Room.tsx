@@ -49,6 +49,7 @@ function Room() {
 
   useEffect(() => {
     if (!roomId) return;
+    localStorage.setItem("currentRoomId", roomId);
 
     const getRoom = async () => {
       try {
@@ -335,6 +336,12 @@ function Room() {
         )}
 
         {gameOver && <Button onPress={createGrid}>Démarrer la partie</Button>}
+
+        <button
+          onClick={() => navigate("/")}
+          className="text-sm text-gray-500 hover:text-gray-700 underline mt-2">
+          ← Accueil
+        </button>
       </div>
 
       {grid && (
@@ -345,6 +352,7 @@ function Room() {
           setFlaggedCells={setFlaggedCells}
           lastCellsPlayed={lastCellsPlayed}
           disabled={!isMyTurn || gameOver}
+          is2Player={is2Player}
         />
       )}
     </div>
