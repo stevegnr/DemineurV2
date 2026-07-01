@@ -157,6 +157,13 @@ export class RoomsService {
     return this.rooms.get(roomId)?.scores ?? {};
   }
 
+  renamePlayer(roomId: string, playerId: string, name: string) {
+    const room = this.rooms.get(roomId);
+    if (!room) return;
+    const player = room.players.find((p) => p.id === playerId);
+    if (player) player.name = name;
+  }
+
   resetGame(roomId: string) {
     const room = this.rooms.get(roomId);
     if (room) {

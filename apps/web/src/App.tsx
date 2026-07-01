@@ -14,8 +14,14 @@ function App() {
   const [selectedMode, setSelectedMode] = useState<"1player" | "2players">(
     "1player"
   );
+  const [playerName, setPlayerName] = useState<string>(
+    localStorage.getItem("playerName") ?? ""
+  );
 
   const handleCreateRoom = async () => {
+    const name = playerName.trim() || "Invité";
+    localStorage.setItem("playerName", name);
+
     try {
       const response = await fetch("http://localhost:3001/rooms", {
         method: "POST",
@@ -38,6 +44,19 @@ function App() {
   return (
     <div className="flex flex-col items-center gap-6 p-8">
       <h1 className="text-2xl font-bold">Démineur</h1>
+
+      <div className="flex flex-col gap-3 w-64">
+        <label className="font-semibold text-sm">Ton pseudo :</label>
+        <input
+          type="text"
+          value={playerName}
+          onChange={(e) => setPlayerName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleCreateRoom()}
+          placeholder="Invité"
+          maxLength={20}
+          className="border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:border-blue-400 focus:outline-none"
+        />
+      </div>
 
       <div className="flex flex-col gap-3">
         <p className="font-semibold">Choisir le mode de jeu :</p>

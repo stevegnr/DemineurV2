@@ -71,6 +71,19 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.to(payload.roomId).emit('gameStarted', { grid: payload.grid });
   }
 
+  @SubscribeMessage('renamePlayer')
+  handleRenamePlayer(
+    client: Socket,
+    payload: { roomId: string; name: string },
+  ) {
+    if (!client.rooms.has(payload.roomId)) return;
+    const trimmed = payload.name.trim();
+    if (!trimmed) return;
+    this.roomsService.renamePlayer(payload.roomId, client.id, trimmed);
+    const players = this.roomsService.getPlayers(payload.roomId);
+    this.server.to(payload.roomId).emit('updatedPlayers', players);
+  }
+
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(client: Socket, payload: { roomId: string }) {
     this.roomsService.removePlayer(payload.roomId, client.id);

@@ -42,6 +42,8 @@ function Room() {
   const [currentTurn, setCurrentTurn] = useState<string | null>(null);
   const [scores, setScores] = useState<Record<string, number>>({});
   const [gameWonData, setGameWonData] = useState<GameWonPayload | null>(null);
+  const [editingName, setEditingName] = useState<boolean>(false);
+  const [nameInput, setNameInput] = useState<string>("");
 
   const socketRef = useRef<Socket | null>(null);
 
@@ -82,7 +84,8 @@ function Room() {
 
     socket.on("connect", () => {
       setMyPlayerId(socket.id ?? null);
-      socket.emit("joinRoom", { roomId });
+      const playerName = localStorage.getItem("playerName") ?? "Invité";
+      socket.emit("joinRoom", { roomId, playerName });
     });
 
     socket.on("updatedPlayers", (payload: UpdatedPlayersPayload) => {
@@ -203,6 +206,14 @@ function Room() {
   const getPlayerName = (id: string) =>
     players.find((p) => p.id === id)?.name ?? "Joueur inconnu";
 
+  const handleRename = () => {
+    const name = nameInput.trim();
+    if (!name || !roomId) return;
+    localStorage.setItem("playerName", name);
+    socketRef.current?.emit("renamePlayer", { roomId, name });
+    setEditingName(false);
+  };
+
   return (
     <div className="flex gap-6 p-4">
       <div className="flex flex-col gap-3 min-w-48">
@@ -231,13 +242,51 @@ function Room() {
                   ? "bg-yellow-100 font-bold"
                   : ""
               }`}>
-              <span>
-                {p.name}
-                {p.id === myPlayerId && " (moi)"}
-                {is2Player && currentTurn === p.id && " ▶"}
-              </span>
+              {p.id === myPlayerId && editingName ? (
+                <form
+                  className="flex items-center gap-1 flex-1"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleRename();
+                  }}>
+                  <input
+                    autoFocus
+                    type="text"
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
+                    onKeyDown={(e) => e.key === "Escape" && setEditingName(false)}
+                    maxLength={20}
+                    className="border border-gray-300 rounded px-1 py-0.5 text-xs flex-1 min-w-0"
+                  />
+                  <button type="submit" className="text-green-600 px-1">✓</button>
+                  <button
+                    type="button"
+                    onClick={() => setEditingName(false)}
+                    className="text-gray-400 px-1">
+                    ✕
+                  </button>
+                </form>
+              ) : (
+                <span className="flex items-center gap-1 flex-1 min-w-0">
+                  <span className="truncate">
+                    {p.name}
+                    {is2Player && currentTurn === p.id && " ▶"}
+                  </span>
+                  {p.id === myPlayerId && (
+                    <button
+                      onClick={() => {
+                        setNameInput(p.name);
+                        setEditingName(true);
+                      }}
+                      title="Changer mon pseudo"
+                      className="text-gray-400 hover:text-gray-600 text-xs shrink-0">
+                      ✏️
+                    </button>
+                  )}
+                </span>
+              )}
               {is2Player && (
-                <span className="ml-2 text-purple-700 font-bold">
+                <span className="ml-2 text-purple-700 font-bold shrink-0">
                   {scores[p.id] ?? 0} pts
                 </span>
               )}
