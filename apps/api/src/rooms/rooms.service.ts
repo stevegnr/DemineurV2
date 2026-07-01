@@ -8,16 +8,21 @@ import { generateOutputCells } from 'src/grids/grid-utils';
 import { OutputRoom } from './dto/Output.room';
 import type { Server } from 'socket.io';
 
+type RoomState = {
+  players: { id: string; name: string }[];
+  mode: '1player' | '2players';
+  currentTurnIndex: number;
+  scores: Record<string, number>;
+};
+
 @Injectable()
 export class RoomsService {
   @InjectRepository(Room) roomRepository: Repository<Room>;
 
-  private rooms: Map<string, { players: { id: string; name: string }[] }> =
-    new Map();
+  private rooms: Map<string, RoomState> = new Map();
 
   async create(createRoomDto: CreateRoomDto): Promise<Room> {
     const room: Room = this.roomRepository.create(createRoomDto);
-
     return this.roomRepository.save(room);
   }
 
@@ -64,15 +69,39 @@ export class RoomsService {
     return this.roomRepository.delete(id);
   }
 
-  addPlayer(roomId: string, player: { id: string; name: string }) {
+  async getRoomMode(roomId: string): Promise<'1player' | '2players'> {
+    const inMemory = this.rooms.get(roomId);
+    if (inMemory) return inMemory.mode;
+
+    const room = await this.roomRepository.findOneBy({ id: roomId });
+    return (room?.mode ?? '1player') as '1player' | '2players';
+  }
+
+  getMode(roomId: string): '1player' | '2players' {
+    return this.rooms.get(roomId)?.mode ?? '1player';
+  }
+
+  canJoin(roomId: string, mode: '1player' | '2players'): boolean {
+    const room = this.rooms.get(roomId);
+    if (!room) return true;
+    const maxPlayers = mode === '1player' ? 1 : 2;
+    return room.players.length < maxPlayers;
+  }
+
+  addPlayer(
+    roomId: string,
+    player: { id: string; name: string },
+    mode: '1player' | '2players',
+  ) {
     let room = this.rooms.get(roomId);
     if (!room) {
-      room = { players: [] };
+      room = { players: [], mode, currentTurnIndex: 0, scores: {} };
       this.rooms.set(roomId, room);
     }
     const exists = room.players.find((p) => p.id === player.id);
     if (!exists) {
       room.players.push(player);
+      room.scores[player.id] = 0;
     }
   }
 
@@ -91,7 +120,6 @@ export class RoomsService {
       const before = room.players.length;
       room.players = room.players.filter((p) => p.id !== playerId);
       if (before !== room.players.length) {
-        // Diffuse la nouvelle liste à cette room
         server.to(roomId).emit('updatedPlayers', room.players);
       }
       if (room.players.length === 0) {
@@ -102,5 +130,41 @@ export class RoomsService {
 
   getPlayers(roomId: string) {
     return this.rooms.get(roomId)?.players ?? [];
+  }
+
+  getCurrentTurn(roomId: string): string | null {
+    const room = this.rooms.get(roomId);
+    if (!room || room.players.length === 0) return null;
+    return room.players[room.currentTurnIndex % room.players.length]?.id ?? null;
+  }
+
+  nextTurn(roomId: string) {
+    const room = this.rooms.get(roomId);
+    if (room && room.players.length > 0) {
+      room.currentTurnIndex =
+        (room.currentTurnIndex + 1) % room.players.length;
+    }
+  }
+
+  addScore(roomId: string, playerId: string, points: number) {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      room.scores[playerId] = (room.scores[playerId] ?? 0) + points;
+    }
+  }
+
+  getScores(roomId: string): Record<string, number> {
+    return this.rooms.get(roomId)?.scores ?? {};
+  }
+
+  resetGame(roomId: string) {
+    const room = this.rooms.get(roomId);
+    if (room) {
+      room.currentTurnIndex = 0;
+      room.scores = {};
+      for (const player of room.players) {
+        room.scores[player.id] = 0;
+      }
+    }
   }
 }

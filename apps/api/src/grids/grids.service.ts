@@ -182,6 +182,7 @@ export class GridsService {
   async revealCells(
     cellsToReveal: { x: number; y: number }[],
     gridId: number,
+    mode: '1player' | '2players' = '1player',
   ): Promise<PayloadCellsOpened> {
     const grid: Grid = await this.gridRepository.findOne({
       where: { id: gridId },
@@ -193,7 +194,6 @@ export class GridsService {
 
     const { width, height } = grid;
 
-    // Filtrer les cellules déjà ouvertes pour ne pas les remettre dans la pile
     const stack: { x: number; y: number }[] = cellsToReveal.filter(
       ({ x, y }) => {
         const index = (y - 1) * width + (x - 1);
@@ -219,36 +219,40 @@ export class GridsService {
       const isBomb: boolean = getBit(grid.mines, index);
 
       if (isBomb) {
-        grid.isGameOver = true;
-        openedCells.push({ x, y, hasBomb: true, bombsAround: -1 });
+        if (mode === '1player') {
+          grid.isGameOver = true;
+          openedCells.push({ x, y, hasBomb: true, bombsAround: -1 });
 
-        revealAll(grid.ouvertures);
+          revealAll(grid.ouvertures);
 
-        // Ajoute toutes les cellules ouvertes restantes
-        for (let ny = 1; ny <= height; ny++) {
-          for (let nx = 1; nx <= width; nx++) {
-            const i = (ny - 1) * width + (nx - 1);
-            if (getBit(grid.ouvertures, i)) {
-              const hasBomb = getBit(grid.mines, i);
-              const bombsAround = hasBomb
-                ? -1
-                : countBombsAround(nx, ny, width, height, grid.mines);
+          for (let ny = 1; ny <= height; ny++) {
+            for (let nx = 1; nx <= width; nx++) {
+              const i = (ny - 1) * width + (nx - 1);
+              if (getBit(grid.ouvertures, i)) {
+                const hasBomb = getBit(grid.mines, i);
+                const bombsAround = hasBomb
+                  ? -1
+                  : countBombsAround(nx, ny, width, height, grid.mines);
 
-              // Évite les doublons
-              if (!openedCells.some((c) => c.x === nx && c.y === ny)) {
-                openedCells.push({
-                  x: nx,
-                  y: ny,
-                  bombsAround,
-                  hasBomb: hasBomb || undefined,
-                });
+                if (!openedCells.some((c) => c.x === nx && c.y === ny)) {
+                  openedCells.push({
+                    x: nx,
+                    y: ny,
+                    bombsAround,
+                    hasBomb: hasBomb || undefined,
+                  });
+                }
               }
             }
           }
-        }
 
-        await this.gridRepository.save(grid);
-        return { openedCells, isGameOver: true };
+          await this.gridRepository.save(grid);
+          return { openedCells, isGameOver: true, isWin: false };
+        } else {
+          // Mode 2 joueurs : la bombe rapporte un point, pas de game over
+          openedCells.push({ x, y, hasBomb: true, bombsAround: -1 });
+          continue;
+        }
       }
 
       const bombsAround: number = countBombsAround(
@@ -260,7 +264,6 @@ export class GridsService {
       );
       openedCells.push({ x, y, bombsAround });
 
-      // Si aucun bombes autour, on ajoute les voisins non ouverts dans la pile
       if (bombsAround === 0) {
         for (let dx = -1; dx <= 1; dx++) {
           for (let dy = -1; dy <= 1; dy++) {
@@ -283,7 +286,23 @@ export class GridsService {
       }
     }
 
+    // Vérification de la condition de victoire
+    const totalCells = width * height;
+    let openedCount = 0;
+    for (let i = 0; i < totalCells; i++) {
+      if (getBit(grid.ouvertures, i)) openedCount++;
+    }
+
+    const isWin =
+      mode === '1player'
+        ? openedCount === totalCells - grid.bombs
+        : openedCount === totalCells;
+
+    if (isWin) {
+      grid.isGameOver = true;
+    }
+
     await this.gridRepository.save(grid);
-    return { openedCells, isGameOver: false };
+    return { openedCells, isGameOver: false, isWin };
   }
 }

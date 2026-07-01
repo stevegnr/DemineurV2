@@ -29,40 +29,119 @@ export class GameGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('joinRoom')
-  handleJoinRoom(
+  async handleJoinRoom(
     client: Socket,
     payload: { roomId: string; playerName?: string },
   ) {
     const { roomId } = payload;
+
+    const mode = await this.roomsService.getRoomMode(roomId);
+
+    if (!this.roomsService.canJoin(roomId, mode)) {
+      client.emit('joinRejected', { reason: 'La salle est pleine' });
+      return;
+    }
+
     client.join(roomId);
     console.log(`Client ${client.id} a rejoint la room ${roomId}`);
 
     const newPlayer = { id: client.id, name: payload.playerName ?? 'Invité' };
+    this.roomsService.addPlayer(roomId, newPlayer, mode);
 
-    this.roomsService.addPlayer(roomId, newPlayer);
-
-    // Broadcast toute la liste mise à jour
     const players = this.roomsService.getPlayers(roomId);
     this.server.to(roomId).emit('updatedPlayers', players);
+
+    const currentTurn = this.roomsService.getCurrentTurn(roomId);
+    const scores = this.roomsService.getScores(roomId);
+    this.server.to(roomId).emit('gameState', { mode, currentTurn, scores });
+  }
+
+  @SubscribeMessage('newGame')
+  handleNewGame(client: Socket, payload: { roomId: string; grid: unknown }) {
+    this.roomsService.resetGame(payload.roomId);
+    const mode = this.roomsService.getMode(payload.roomId);
+    const currentTurn = this.roomsService.getCurrentTurn(payload.roomId);
+    const scores = this.roomsService.getScores(payload.roomId);
+    this.server
+      .to(payload.roomId)
+      .emit('gameState', { mode, currentTurn, scores });
+    this.server
+      .to(payload.roomId)
+      .emit('gameStarted', { grid: payload.grid });
   }
 
   @SubscribeMessage('leaveRoom')
   handleLeaveRoom(client: Socket, payload: { roomId: string }) {
     this.roomsService.removePlayer(payload.roomId, client.id);
 
-    // Broadcast toute la liste mise à jour
     const players = this.roomsService.getPlayers(payload.roomId);
     this.server.to(payload.roomId).emit('updatedPlayers', players);
   }
 
   @SubscribeMessage('playMoves')
   async handlePlayMoves(client: Socket, payload: PlayMovesPayload) {
-    // Update game
+    console.log('payload', payload);
+    const mode = this.roomsService.getMode(payload.roomId);
+
+    if (mode === '2players') {
+      const currentTurn = this.roomsService.getCurrentTurn(payload.roomId);
+      if (currentTurn !== client.id) {
+        client.emit('notYourTurn');
+        return;
+      }
+    }
+
     const updatedGrid: PayloadCellsOpened = await this.gridsService.revealCells(
       payload.cells,
       payload.gridId,
+      mode,
     );
 
-    this.server.to(payload.roomId).emit('updatedGrid', updatedGrid);
+    if (mode === '2players') {
+      const bombsFound = updatedGrid.openedCells.filter(
+        (c) => c.hasBomb,
+      ).length;
+      if (bombsFound > 0) {
+        this.roomsService.addScore(payload.roomId, client.id, bombsFound);
+      } else {
+        this.roomsService.nextTurn(payload.roomId);
+      }
+    }
+
+    const currentTurn = this.roomsService.getCurrentTurn(payload.roomId);
+    const scores = this.roomsService.getScores(payload.roomId);
+
+    this.server.to(payload.roomId).emit('updatedGrid', {
+      ...updatedGrid,
+      currentTurn,
+      scores,
+    });
+
+    if (updatedGrid.isWin) {
+      const winner = this.getWinner(mode, payload.roomId, scores);
+      this.server.to(payload.roomId).emit('gameWon', {
+        mode,
+        scores,
+        winner,
+      });
+    }
+  }
+
+  private getWinner(
+    mode: '1player' | '2players',
+    roomId: string,
+    scores: Record<string, number>,
+  ): string | null {
+    if (mode === '1player') {
+      const players = this.roomsService.getPlayers(roomId);
+      return players[0]?.id ?? null;
+    }
+
+    const entries = Object.entries(scores);
+    if (entries.length === 0) return null;
+
+    const maxScore = Math.max(...entries.map(([, s]) => s));
+    const winners = entries.filter(([, s]) => s === maxScore);
+    return winners.length === 1 ? winners[0][0] : null;
   }
 }

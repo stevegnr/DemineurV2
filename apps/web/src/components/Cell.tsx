@@ -17,6 +17,7 @@ type Props = {
   flaggedCells: CellType[];
   lastCellsPlayed: { x: number; y: number }[];
   allCells: CellType[];
+  disabled?: boolean;
 };
 
 const Cell = ({
@@ -26,6 +27,7 @@ const Cell = ({
   setFlaggedCells,
   lastCellsPlayed,
   allCells,
+  disabled = false,
 }: Props) => {
   const { isOpen, hasBomb, bombsAround, x, y } = cell;
 
@@ -38,7 +40,7 @@ const Cell = ({
   );
 
   const handleClick = () => {
-    if (isFlagged) return;
+    if (disabled || isFlagged) return;
 
     if (isOpen && bombsAround > 0) {
       const adjCells: CellType[] = getAdjacentCells(x, y, allCells);
@@ -66,7 +68,7 @@ const Cell = ({
 
   const handleRightClick = (e: MouseEvent) => {
     e.preventDefault();
-    if (isOpen) return;
+    if (disabled || isOpen) return;
 
     setFlaggedCells((prev) => {
       const isAlreadyFlagged: boolean = prev.some(
@@ -122,7 +124,7 @@ const Cell = ({
       onContextMenu={handleRightClick}
       className={`
         border-2 border-gray-600 w-10 h-10 rounded-md text-center text-2xl font-bold
-        ${isOpen ? "bg-white" : "bg-gray-400 cursor-pointer"}
+        ${isOpen ? "bg-white" : disabled ? "bg-gray-400 cursor-default" : "bg-gray-400 cursor-pointer"}
         
       `}
       style={{ color: isOpen ? textColor : undefined }}>

@@ -17,6 +17,7 @@ type Props = {
   setFlaggedCells: Dispatch<SetStateAction<CellType[]>>;
   flaggedCells: CellType[];
   lastCellsPlayed: { x: number; y: number }[];
+  disabled?: boolean;
 };
 
 const Grid = ({
@@ -25,6 +26,7 @@ const Grid = ({
   flaggedCells,
   setFlaggedCells,
   lastCellsPlayed,
+  disabled = false,
 }: Props) => {
   const { bombs, cells, width, height } = grid;
 
@@ -68,6 +70,7 @@ const Grid = ({
                         flaggedCells={flaggedCells}
                         lastCellsPlayed={lastCellsPlayed}
                         allCells={cells}
+                        disabled={disabled}
                       />
                     </td>
                   ))}

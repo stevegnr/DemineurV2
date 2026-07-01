@@ -5,7 +5,7 @@ import Grid from "./Grid";
 import { io, type Socket } from "socket.io-client";
 import type { CellType } from "./Cell";
 import type { RoomType } from "../App";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { updateGrid } from "../utils/room";
 
 type newGrid = {
@@ -19,21 +19,29 @@ type UpdatedPlayersPayload = { id: string; name: string }[];
 
 type Player = { id: string; name: string };
 
+type GameWonPayload = {
+  mode: "1player" | "2players";
+  scores: Record<string, number>;
+  winner: string | null;
+};
+
 function Room() {
   const { roomId } = useParams<{ roomId: string }>();
+  const navigate = useNavigate();
 
   const [room, setRoom] = useState<RoomType | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [grid, setGrid] = useState<GridType | null>(null);
   const [flaggedCells, setFlaggedCells] = useState<CellType[]>([]);
   const [lastCellsPlayed, setLastCellsPlayed] = useState<
-    {
-      x: number;
-      y: number;
-    }[]
+    { x: number; y: number }[]
   >([{ x: 0, y: 0 }]);
-
   const [gameOver, setGameOver] = useState<boolean>(true);
+
+  const [myPlayerId, setMyPlayerId] = useState<string | null>(null);
+  const [currentTurn, setCurrentTurn] = useState<string | null>(null);
+  const [scores, setScores] = useState<Record<string, number>>({});
+  const [gameWonData, setGameWonData] = useState<GameWonPayload | null>(null);
 
   const socketRef = useRef<Socket | null>(null);
 
@@ -44,9 +52,7 @@ function Room() {
       try {
         const response: Response = await fetch(
           "http://localhost:3001/rooms/" + roomId,
-          {
-            method: "GET",
-          }
+          { method: "GET" }
         );
 
         if (!response.ok) {
@@ -57,7 +63,6 @@ function Room() {
         const data: RoomType = await response.json();
         if (data.grid) {
           setGameOver(data.grid.isGameOver);
-
           if (data.grid.cells && data.grid.cells.length > 0) {
             setGrid(data.grid);
           }
@@ -75,24 +80,58 @@ function Room() {
     const socket: Socket = io("http://localhost:3001");
     socketRef.current = socket;
 
-    // Rejoindre une salle
-    socket.emit("joinRoom", { roomId });
+    socket.on("connect", () => {
+      setMyPlayerId(socket.id ?? null);
+      socket.emit("joinRoom", { roomId });
+    });
 
-    // Écouter les MAJs des joueurs
     socket.on("updatedPlayers", (payload: UpdatedPlayersPayload) => {
       setPlayers(payload);
     });
 
-    // Écouter les MAJs de la grille
+    socket.on(
+      "gameState",
+      (payload: {
+        mode: "1player" | "2players";
+        currentTurn: string | null;
+        scores: Record<string, number>;
+      }) => {
+        setCurrentTurn(payload.currentTurn);
+        setScores(payload.scores);
+        // Sync mode from server in case room state wasn't loaded yet
+        setRoom((prev) =>
+          prev ? { ...prev, mode: payload.mode } : prev
+        );
+      }
+    );
+
     socket.on("updatedGrid", (payload) => {
-      if (payload.isGameOver) setGameOver(true);
+      if (payload.isGameOver || payload.isWin) setGameOver(true);
+      if (payload.currentTurn !== undefined) setCurrentTurn(payload.currentTurn);
+      if (payload.scores !== undefined) setScores(payload.scores);
       setGrid((currentGrid) => {
         if (!currentGrid) return currentGrid;
         return updateGrid(currentGrid, payload.openedCells);
       });
     });
 
-    // 👉 Déconnexion propre si l'onglet ferme
+    socket.on("gameStarted", ({ grid }: { grid: GridType }) => {
+      setGrid(grid);
+      setGameOver(false);
+      setFlaggedCells([]);
+      setGameWonData(null);
+    });
+
+    socket.on("gameWon", (payload: GameWonPayload) => {
+      setGameWonData(payload);
+      setGameOver(true);
+    });
+
+    socket.on("joinRejected", ({ reason }: { reason: string }) => {
+      alert(`Impossible de rejoindre la salle : ${reason}`);
+      navigate("/");
+    });
+
     const handleBeforeUnload = () => {
       socket.emit("leaveRoom", { roomId });
     };
@@ -104,7 +143,7 @@ function Room() {
       socket.disconnect();
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [roomId]);
+  }, [roomId, navigate]);
 
   const createGrid = async () => {
     if (!roomId) return;
@@ -122,9 +161,11 @@ function Room() {
       }
 
       const data: GridType = await response.json();
-      setGrid(data);
-      setGameOver(false);
-      setFlaggedCells([]);
+
+      // Diffuse la grille à tous les joueurs de la salle (synchronise le gridId)
+      if (socketRef.current?.connected) {
+        socketRef.current.emit("newGame", { roomId, grid: data });
+      }
     } catch (error) {
       console.error("Fetch error:", error);
     }
@@ -140,28 +181,107 @@ function Room() {
         roomId: room!.id,
       });
 
-      const lastPlayed: { x: number; y: number }[] = cells.map((c) => {
-        return {
-          x: c.x,
-          y: c.y,
-        };
-      });
-      setLastCellsPlayed(lastPlayed);
+      setLastCellsPlayed(cells.map((c) => ({ x: c.x, y: c.y })));
     } else {
       console.warn("Socket non connecté");
     }
   };
 
+  const mode = room?.mode ?? "1player";
+  const is2Player = mode === "2players";
+
+  const isMyTurn =
+    !is2Player ||
+    (players.length >= 2 && myPlayerId === currentTurn);
+
+  const getPlayerName = (id: string) =>
+    players.find((p) => p.id === id)?.name ?? "Joueur inconnu";
+
   return (
-    <div className="flex">
-      <div>
-        <h2>{room ? "Salle : " + room.id : "Création de la salle"}</h2>
-        {players?.map((p) => (
-          <p key={p.id}>{p.name}</p>
-        ))}
-        <p>Lien : http://localhost5173/rooms/{roomId}</p>
+    <div className="flex gap-6 p-4">
+      <div className="flex flex-col gap-3 min-w-48">
+        <h2 className="font-bold text-lg">
+          {room ? "Salle : " + room.id.slice(0, 8) + "…" : "Chargement…"}
+        </h2>
+
+        <div className="text-sm">
+          <span
+            className={`inline-block px-2 py-0.5 rounded font-semibold ${
+              is2Player
+                ? "bg-green-100 text-green-700"
+                : "bg-blue-100 text-blue-700"
+            }`}>
+            {is2Player ? "2 Joueurs" : "1 Joueur"}
+          </span>
+        </div>
+
+        <div>
+          <p className="font-semibold text-sm mb-1">Joueurs :</p>
+          {players.map((p) => (
+            <div
+              key={p.id}
+              className={`flex justify-between items-center text-sm px-2 py-1 rounded ${
+                is2Player && currentTurn === p.id
+                  ? "bg-yellow-100 font-bold"
+                  : ""
+              }`}>
+              <span>
+                {p.name}
+                {p.id === myPlayerId && " (moi)"}
+                {is2Player && currentTurn === p.id && " ▶"}
+              </span>
+              {is2Player && (
+                <span className="ml-2 text-purple-700 font-bold">
+                  {scores[p.id] ?? 0} pts
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {is2Player && players.length < 2 && (
+          <p className="text-sm text-gray-500">
+            En attente d'un second joueur…
+            <br />
+            Partage le lien :{" "}
+            <span className="font-mono text-xs break-all">
+              http://localhost:5173/rooms/{roomId}
+            </span>
+          </p>
+        )}
+
+        {is2Player && players.length >= 2 && !gameOver && (
+          <p className="text-sm font-semibold">
+            {isMyTurn ? "C'est ton tour !" : `Tour de ${getPlayerName(currentTurn ?? "")}`}
+          </p>
+        )}
+
+        {gameWonData && (
+          <div className="bg-yellow-50 border border-yellow-300 rounded p-3 text-sm">
+            <p className="font-bold text-lg mb-1">
+              {gameWonData.mode === "1player"
+                ? "🎉 Victoire !"
+                : gameWonData.winner === myPlayerId
+                ? "🏆 Tu as gagné !"
+                : gameWonData.winner === null
+                ? "🤝 Égalité !"
+                : `🏆 ${getPlayerName(gameWonData.winner)} a gagné !`}
+            </p>
+            {gameWonData.mode === "2players" && (
+              <div>
+                {Object.entries(gameWonData.scores).map(([id, score]) => (
+                  <p key={id}>
+                    {getPlayerName(id)} : {score} pts
+                  </p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {gameOver && <Button onPress={createGrid}>Démarrer la partie</Button>}
       </div>
+
       {grid && (
         <Grid
           grid={grid}
@@ -169,6 +289,7 @@ function Room() {
           flaggedCells={flaggedCells}
           setFlaggedCells={setFlaggedCells}
           lastCellsPlayed={lastCellsPlayed}
+          disabled={!isMyTurn || gameOver}
         />
       )}
     </div>

@@ -14,7 +14,7 @@ Recréer un jeu de démineur multijoueur comme https://minesweeper-multiplayer.d
 - Si la case ne contient rien, ouvrir les cases adjacentes (récursivité) ✅
 - Si le joueur ouvre toutes les cases sauf les bombes, victoire
 - Redémarrer le jeu
-- Au clic droit, ajouter un drapeau sur une case. Si on clique sur une case qui a suffisament de drapeaux autour, ouvrir les autres cases ✅
+- Au clic droit, ajouter un drapeau sur une case. Si on clique sur une case qui a suffisamment de drapeaux autour, ouvrir les autres cases ✅
 
 ### Démineur multijoueur
 - Créer une "room" ✅

@@ -5,6 +5,12 @@ export type PlayMovesPayload = {
 };
 
 export type PayloadCellsOpened = {
-  openedCells: { x: number; y: number; bombsAround: number }[];
+  openedCells: {
+    x: number;
+    y: number;
+    bombsAround: number;
+    hasBomb?: boolean;
+  }[];
   isGameOver: boolean;
+  isWin: boolean;
 };
